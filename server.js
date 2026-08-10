@@ -1,5 +1,5 @@
 const http=require("http"),fs=require("fs"),path=require("path"),WebSocket=require("ws");
-const PORT=process.env.PORT||8080,W=1100,H=600,GOAL_H=210,PLAYER_R=18,BALL_R=13,MAX_PLAYERS=16;
+const PORT=process.env.PORT||8080,W=1400,H=700,GOAL_H=240,PLAYER_R=18,BALL_R=13,MAX_PLAYERS=12;
 const players=new Map();let nextId=1,score={blue:0,red:0},round=1,resetAt=0;
 const ball={x:W/2,y:H/2,vx:0,vy:0};
 
