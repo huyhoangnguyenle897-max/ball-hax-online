@@ -1,1 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ball Penalty</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#071b2e}
+*{box-sizing:border-box}
+button{width:88%;max-width:360px;padding:16px;margin:7px;border:0;border-radius:16px;font-size:19px;font-weight:bold;color:#fff;background:#087f4d;box-shadow:0 5px 12px #0004}
+button:active{transform:scale(.97)}
+.screen{display:none;position:absolute;inset:0}
+#home{display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#38e39a,#087d58 50%,#06416a);text-align:center}
+.panel{width:92%;max-width:430px;padding:25px 15px;background:#fffffff2;border-radius:26px;color:#123b31;box-shadow:0 15px 40px #0005}
+.logo{font-size:48px}.title{font-size:34px;font-weight:900;color:#087c4c}.small{color:#537066}
+.row{display:flex;justify-content:space-between;padding:7px 3px}.bar{height:8px;background:#d9e7e2;border-radius:8px}.bar span{display:block;height:100%;width:10%;background:#ffb300;border-radius:8px}
+#menu,#mode{align-items:center;justify-content:center;text-align:center;color:white;background:linear-gradient(145deg,#073b68,#087e55)}
+#game{background:#288f45}
+#canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+#hud{position:absolute;top:8px;width:100%;text-align:center;color:white;font-size:25px;font-weight:bold;text-shadow:0 2px 4px #000;pointer-events:none}
+#help{position:absolute;bottom:12px;width:100%;text-align:center;color:white;font-weight:bold;text-shadow:0 2px 4px #000;pointer-events:none}
+#result{display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;background:#000b;z-index:5}
+#result h1{font-size:40px}
+#upgrade{display:none;align-items:center;justify-content:center;text-align:center;color:white;background:#000b;z-index:6}
+</style>
+</head>
+<body>
 
+<div id="home" class="screen">
+<div class="panel">
+<div class="logo">⚽</div>
+<div class="title">BALL PENALTY</div>
+<p class="small">Football Career 2D</p>
+<div class="row"><b>⭐ Level</b><b id="lv">1</b></div>
+<div class="row"><b>✨ XP</b><b id="xp">0 / 100</b></div>
+<div class="row"><b>💰 Tiền</b><b id="money">100</b></div>
+<div class="row"><b>⚽ Sút</b><b id="shoot">1</b></div>
+<div class="bar"><span id="shootBar"></span></div>
+<div class="row"><b>🎯 Kỹ thuật</b><b id="skill">1</b></div>
+<div class="bar"><span id="skillBar"></span></div>
+<br>
+<button id="enter">⚽ VÀO SÂN</button>
+<button id="upgradeButton">📈 NÂNG CẤP</button>
+<button id="reset">🔄 XÓA TIẾN TRÌNH</button>
+</div>
+</div>
+
+<div id="menu" class="screen">
+<h1>🏟️ BALL PENALTY</h1>
+<p>Chọn chế độ chơi</p>
+<button id="penalty">⚽ PENALTY</button>
+<button id="free">🎯 ĐÁ PHẠT</button>
+<button id="long">🚀 SÚT XA</button>
+<button id="menuHome">← SẢNH CHỜ</button>
+</div>
+
+<div id="mode" class="screen">
+<h1 id="modeName">⚽ PENALTY</h1>
+<p>5 lượt sút. Ghi càng nhiều bàn càng tốt!</p>
+<p>👆 Chạm vào bóng, kéo ngón tay tới nơi muốn sút rồi thả.</p>
+<button id="start">▶ BẮT ĐẦU</button>
+<button id="modeBack">← QUAY LẠI</button>
+</div>
+
+<div id="game" class="screen">
+<canvas id="canvas"></canvas>
+<div id="hud">⚽ <span id="score">0 / 5</span></div>
+<div id="help">👆 Chạm bóng → vẽ đường sút → thả tay</div>
+</div>
+
+<div id="result" class="screen">
+<h1 id="resultTitle">⚽ GOOOAL!</h1>
+<p id="resultText"></p>
+<button id="continue">TIẾP TỤC</button>
+</div>
+
+<div id="upgrade" class="screen">
+<div class="panel">
+<h2>📈 NÂNG CẤP</h2>
+<p>💰 <span id="upMoney">100</span></p>
+<button id="upShoot">⚽ Sút +1 — 50 💰</button>
+<button id="upSkill">🎯 Kỹ thuật +1 — 50 💰</button>
+<button id="closeUp">← ĐÓNG</button>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var screens=["home","menu","mode","game","result","upgrade"];
+var player={level:1,xp:0,money:100,shoot:1,skill:1};
+var mode="penalty",shots=0,goals=0;
+var W=window.innerWidth,H=window.innerHeight;
+var ball={x:0,y:0,r:18};
+var keeper={x:0,y:0,r:28,target:0,active:false};
+var wall=[],wallDir=1,wallSpeed=1.4;
+var path=[],moving=false,points=[],pointIndex=0;
+var audio=null;
+
+function $(id){return document.getElementById(id)}
+function screen(id){
+  for(var i=0;i<screens.length;i++) $(screens[i]).style.display="none";
+  $(id).style.display="flex";
+}
+function save(){try{localStorage.setItem("BALL_PENALTY_SAVE",JSON.stringify(player))}catch(e){}}
+function load(){try{var x=localStorage.getItem("BALL_PENALTY_SAVE");if(x)player=Object.assign(player,JSON.parse(x))}catch(e){}}
+function needXP(){return 100+(player.level-1)*50}
+function ui(){
+ $("lv").textContent=player.level;
+ $("xp").textContent=player.xp+" / "+needXP();
+ $("money").textContent=player.money;
+ $("shoot").textContent=player.shoot;
+ $("skill").textContent=player.skill;
+ $("shootBar").style.width=Math.min(100,player.shoot*10)+"%";
+ $("skillBar").style.width=Math.min(100,player.skill*10)+"%";
+}
+function addXP(n){
+ player.xp+=n;
+ while(player.xp>=needXP()){player.xp-=needXP();player.level++;player.money+=100}
+ save();ui();
+}
+function openAudio(){
+ try{
+  if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==="suspended")audio.resume();
+ }catch(e){}
+}
+function sound(goal){
+ openAudio();if(!audio)return;
+ var count=goal?14:6;
+ for(var i=0;i<count;i++){
+  var o=audio.createOscillator(),g=audio.createGain();
+  o.type=goal?"sawtooth":"sine";
+  o.frequency.value=goal?250+Math.random()*600:230-i*18;
+  g.gain.value=.0001;o.connect(g);g.connect(audio.destination);
+  var t=audio.currentTime+i*(goal?.035:.09);
+  g.gain.exponentialRampToValueAtTime(goal?.035:.02,t+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,t+(goal?.18:.3));
+  o.start(t);o.stop(t+(goal?.2:.32));
+ }
+}
+
+$("enter").onclick=function(){screen("menu")};
+$("menuHome").onclick=function(){screen("home")};
+$("penalty").onclick=function(){choose("penalty")};
+$("free").onclick=function(){choose("free")};
+$("long").onclick=function(){choose("long")};
+$("modeBack").onclick=function(){screen("menu")};
+$("start").onclick=function(){openAudio();shots=0;goals=0;screen("game");resetShot()};
+$("continue").onclick=function(){nextShot()};
+$("upgradeButton").onclick=function(){$("upMoney").textContent=player.money;screen("upgrade")};
+$("closeUp").onclick=function(){screen("home")};
+$("upShoot").onclick=function(){buy("shoot")};
+$("upSkill").onclick=function(){buy("skill")};
+$("reset").onclick=function(){if(confirm("Xóa toàn bộ tiến trình?")){try{localStorage.removeItem("BALL_PENALTY_SAVE")}catch(e){}location.reload()}};
+
+function choose(m){
+ mode=m;
+ $("modeName").textContent=m==="penalty"?"⚽ PENALTY":m==="free"?"🎯 ĐÁ PHẠT":"🚀 SÚT XA";
+ screen("mode");
+}
+function buy(s){
+ if(player.money<50){alert("Không đủ tiền!");return}
+ player.money-=50;player[s]++;save();ui();$("upMoney").textContent=player.money;
+}
+
+var canvas=$("canvas"),ctx=canvas.getContext("2d");
+function resize(){W=window.innerWidth;H=window.innerHeight;canvas.width=W;canvas.height=H}
+window.addEventListener("resize",resize);
+
+function goal(){
+ var w=Math.min(360,W*.78);
+ return{x:W/2-w/2,y:50,w:w,h:125};
+}
+function resetShot(){
+ resize();
+ var g=goal();
+ ball.x=W/2;
+ ball.y=mode==="penalty"?H-150:(mode==="free"?H-235:H-310);
+ keeper.x=W/2;keeper.y=g.y+90;keeper.target=W/2;keeper.active=false;
+ wall=[];wallDir=Math.random()<.5?-1:1;
+ wallSpeed=Math.min(4,1.1+player.level*.18);
+ if(mode==="free")for(var i=0;i<5;i++)wall.push({x:W/2-100+i*50,y:H-350,r:20});
+ if(mode==="long")for(var j=0;j<4;j++)wall.push({x:W/2-75+j*50,y:H-440,r:19});
+ path=[];points=[];pointIndex=0;moving=false;
+ $("score").textContent=goals+" / 5";
+}
+
+function draw(){
+ ctx.fillStyle="#278e42";ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle="#ffffff20";ctx.lineWidth=2;
+ for(var y=0;y<H;y+=70){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ var g=goal();
+ ctx.strokeStyle="#fff";ctx.lineWidth=7;ctx.strokeRect(g.x,g.y,g.w,g.h);
+ ctx.strokeStyle="#ffffff35";ctx.lineWidth=2;
+ for(var x=g.x;x<g.x+g.w;x+=25){ctx.beginPath();ctx.moveTo(x,g.y);ctx.lineTo(x,g.y+g.h);ctx.stroke()}
+
+ for(var i=0;i<wall.length;i++){
+  var p=wall[i];
+  ctx.fillStyle="#eee";ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#1554a5";ctx.fillRect(p.x-13,p.y+10,26,23);
+ }
+ ctx.fillStyle="#176fff";ctx.beginPath();ctx.ellipse(keeper.x,keeper.y,keeper.r*(keeper.active?1.4:1),keeper.r,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#fff";ctx.lineWidth=3;ctx.stroke();
+ ctx.strokeStyle="#ffd0aa";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(keeper.x-15,keeper.y);ctx.lineTo(keeper.x-38*(keeper.active?1.4:1),keeper.y+5);ctx.moveTo(keeper.x+15,keeper.y);ctx.lineTo(keeper.x+38*(keeper.active?1.4:1),keeper.y+5);ctx.stroke();
+
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#222";ctx.lineWidth=3;ctx.stroke();
+
+ if(path.length>1){
+  ctx.strokeStyle="#ffe14a";ctx.lineWidth=6;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);
+  for(var k=1;k<path.length;k++)ctx.lineTo(path[k].x,path[k].y);
+  ctx.stroke();
+ }
+}
+
+function updateWall(){
+ if(mode==="penalty"||moving||wall.length===0)return;
+ for(var i=0;i<wall.length;i++)wall[i].x+=wallDir*wallSpeed;
+ var min=W/2-155,max=W/2+155;
+ if(wall[0].x<=min)wallDir=1;
+ if(wall[wall.length-1].x>=max)wallDir=-1;
+}
+
+function pos(e){
+ var r=canvas.getBoundingClientRect();
+ return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+canvas.addEventListener("pointerdown",function(e){
+ if(moving)return;
+ var p=pos(e);
+ if(Math.hypot(p.x-ball.x,p.y-ball.y)<=75){
+  path=[{x:ball.x,y:ball.y}];
+  path.push(p);
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+ }
+});
+canvas.addEventListener("pointermove",function(e){
+ if(path.length>0&&path.length<120)path.push(pos(e));
+});
+canvas.addEventListener("pointerup",function(){
+ if(path.length>=4)kick();
+ else path=[];
+});
+
+function kick(){
+ points=[];
+ for(var i=0;i<path.length;i+=2)points.push(path[i]);
+ points.push(path[path.length-1]);
+ pointIndex=1;moving=true;
+ var g=goal(),last=points[points.length-1],target=last;
+ for(var i=0;i<points.length;i++){
+  if(points[i].y>=g.y&&points[i].y<=g.y+g.h){target=points[i];break}
+ }
+ var chance=Math.min(.9,.72+player.level*.015);
+ keeper.target=Math.random()<chance?Math.max(g.x+keeper.r,Math.min(g.x+g.w-keeper.r,target.x)):g.x+Math.random()*g.w;
+ keeper.active=true;path=[];
+}
+
+function physics(){
+ if(!moving)return;
+ if(pointIndex>=points.length){miss();return}
+ var t=points[pointIndex],dx=t.x-ball.x,dy=t.y-ball.y,d=Math.hypot(dx,dy),speed=14+player.shoot*.7;
+ if(d<=speed){ball.x=t.x;ball.y=t.y;pointIndex++}
+ else{ball.x+=dx/d*speed;ball.y+=dy/d*speed}
+
+ if(keeper.active){
+  var kd=keeper.target-keeper.x;
+  keeper.x+=Math.sign(kd)*(Math.min(Math.abs(kd),mode==="penalty"?9:7));
+ }
+ for(var i=0;i<wall.length;i++){
+  if(Math.hypot(ball.x-wall[i].x,ball.y-wall[i].y)<ball.r+wall[i].r){miss();return}
+ }
+ if(Math.hypot(ball.x-keeper.x,ball.y-keeper.y)<ball.r+keeper.r){
+  var saveChance=Math.max(.35,.78-player.skill*.025);
+  if(Math.random()<saveChance){saveKeeper();return}
+ }
+ var g=goal();
+ if(ball.x>g.x&&ball.x<g.x+g.w&&ball.y>g.y&&ball.y<g.y+g.h){scoreGoal();return}
+ if(ball.x<-100||ball.x>W+100||ball.y<-100){miss()}
+}
+function scoreGoal(){
+ moving=false;keeper.active=false;goals++;player.money+=30;addXP(35);sound(true);
+ showResult("⚽ GOOOOOAL!","🎉 KHÁN GIẢ HÒ REO!  +35 XP • +30 💰");
+}
+function saveKeeper(){
+ moving=false;keeper.active=false;sound(false);
+ showResult("🧤 BẮT DÍNH!","😔 Khán giả thất vọng... Thủ môn đã cản phá!");
+}
+function miss(){
+ moving=false;keeper.active=false;sound(false);
+ showResult("❌ HỤT!","😔 Khán giả thất vọng vì cú sút không thành công.");
+}
+function showResult(a,b){
+ $("resultTitle").textContent=a;$("resultText").textContent=b;screen("result");
+}
+function nextShot(){
+ shots++;
+ if(shots>=5){
+  $("resultTitle").textContent="🏁 HẾT 5 LƯỢT!";
+  $("resultText").textContent="Bạn ghi được "+goals+"/5 bàn.";
+  $("continue").textContent="VỀ SẢNH";
+  $("continue").onclick=function(){$("continue").textContent="TIẾP TỤC";$("continue").onclick=nextShot;screen("home")};
+  screen("result");
+ }else{
+  $("continue").textContent="TIẾP TỤC";
+  $("continue").onclick=nextShot;
+  screen("game");resetShot();
+ }
+}
+
+function loop(){
+ if($("game").style.display==="flex"){updateWall();physics();draw()}
+ requestAnimationFrame(loop);
+}
+load();ui();resize();screen("home");loop();
+})();
+</script>
+</body>
+</html>
