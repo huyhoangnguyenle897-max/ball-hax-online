@@ -2,11 +2,13 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+
 <meta name="viewport"
       content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no,
+               viewport-fit=cover">
 
 <title>Ball Hax Online</title>
 
@@ -16,7 +18,8 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -27,118 +30,486 @@ html, body {
     touch-action: none;
 }
 
+body {
+    user-select: none;
+}
+
+/* =====================================================
+   GAME CANVAS
+===================================================== */
+
 #game {
     position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
     display: block;
-    background: #168a45;
+    background: #168b45;
 }
+
+/* =====================================================
+   LOBBY
+===================================================== */
+
+#lobby {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(25,150,75,.45),
+            rgba(0,0,0,.92)
+        );
+}
+
+.lobbyBox {
+    width: min(420px, 92vw);
+    padding: 28px 22px 24px;
+
+    border-radius: 20px;
+
+    background: rgba(20,20,20,.94);
+
+    border: 1px solid rgba(255,255,255,.15);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.6);
+
+    text-align: center;
+
+    color: white;
+}
+
+.lobbyBall {
+    font-size: 48px;
+    margin-bottom: 4px;
+}
+
+.lobbyTitle {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.lobbySubtitle {
+    color: rgba(255,255,255,.65);
+    font-size: 13px;
+    margin-bottom: 22px;
+}
+
+#nameInput {
+    width: 100%;
+    height: 50px;
+
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 12px;
+
+    outline: none;
+
+    background: rgba(255,255,255,.08);
+
+    color: white;
+
+    padding: 0 15px;
+
+    font-size: 16px;
+
+    text-align: center;
+}
+
+#nameInput::placeholder {
+    color: rgba(255,255,255,.4);
+}
+
+#joinButton {
+    width: 100%;
+    height: 50px;
+
+    margin-top: 12px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: #19a653;
+
+    color: white;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#joinButton:active {
+    transform: scale(.97);
+}
+
+#lobbyError {
+    min-height: 20px;
+
+    margin-top: 12px;
+
+    color: #ff6666;
+
+    font-size: 13px;
+}
+
+/* =====================================================
+   SCOREBOARD
+===================================================== */
 
 #scoreboard {
     position: fixed;
-    top: 8px;
+
+    top: max(8px, env(safe-area-inset-top));
+
     left: 50%;
+
     transform: translateX(-50%);
-    z-index: 5;
+
+    z-index: 20;
+
     color: white;
+
     text-align: center;
+
     font-weight: bold;
+
     text-shadow:
-        0 2px 3px rgba(0,0,0,.8),
-        0 0 5px rgba(0,0,0,.5);
+        0 2px 4px rgba(0,0,0,.9);
+
     pointer-events: none;
-    user-select: none;
 }
 
 #title {
-    font-size: 20px;
-}
-
-#score {
     font-size: 19px;
 }
 
-#time {
-    font-size: 17px;
+#score {
+    font-size: 20px;
+
+    margin-top: 1px;
 }
+
+#time {
+    font-size: 16px;
+
+    margin-top: 1px;
+}
+
+#roundMode {
+    font-size: 11px;
+
+    color: rgba(255,255,255,.72);
+
+    margin-top: 2px;
+}
+
+/* =====================================================
+   STATUS
+===================================================== */
 
 #status {
     position: fixed;
+
     left: 50%;
     top: 48%;
+
     transform: translate(-50%, -50%);
-    z-index: 6;
-    color: white;
-    font-size: 30px;
-    font-weight: bold;
-    text-shadow: 0 3px 6px black;
+
+    z-index: 30;
+
     display: none;
+
+    color: white;
+
+    font-size: 30px;
+
+    font-weight: bold;
+
+    text-align: center;
+
+    text-shadow:
+        0 3px 8px rgba(0,0,0,.9);
+
     pointer-events: none;
+
+    white-space: nowrap;
 }
 
-/* JOYSTICK */
+/* =====================================================
+   JOYSTICK
+===================================================== */
 
 #joystick {
     position: fixed;
-    left: 25px;
-    bottom: 35px;
+
+    left: 24px;
+
+    bottom:
+        calc(28px + env(safe-area-inset-bottom));
+
     width: 135px;
     height: 135px;
-    border: 3px solid rgba(255,255,255,.65);
+
+    border:
+        3px solid rgba(255,255,255,.58);
+
     border-radius: 50%;
-    z-index: 10;
-    background: rgba(255,255,255,.04);
+
+    background:
+        rgba(255,255,255,.035);
+
+    z-index: 40;
+
+    touch-action: none;
 }
 
 #stick {
     position: absolute;
+
     width: 58px;
     height: 58px;
+
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
+
+    transform:
+        translate(-50%, -50%);
+
     border-radius: 50%;
-    background: rgba(255,255,255,.35);
-    border: 2px solid rgba(255,255,255,.8);
+
+    background:
+        rgba(255,255,255,.32);
+
+    border:
+        2px solid rgba(255,255,255,.75);
+
+    pointer-events: none;
 }
 
-/* KICK BUTTON */
+/* =====================================================
+   KICK
+===================================================== */
 
 #kick {
     position: fixed;
-    right: 25px;
-    bottom: 35px;
-    width: 100px;
-    height: 100px;
+
+    right: 24px;
+
+    bottom:
+        calc(28px + env(safe-area-inset-bottom));
+
+    width: 104px;
+    height: 104px;
+
     border-radius: 50%;
+
     border: 3px solid white;
+
     background: #ef4148;
+
     color: white;
+
     font-size: 18px;
+
     font-weight: bold;
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,.35);
+
+    z-index: 40;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.35);
+
+    touch-action: none;
 }
 
 #kick:active {
     transform: scale(.93);
-    background: #d62e35;
+    background: #d72e35;
 }
+
+/* =====================================================
+   HELP
+===================================================== */
 
 #help {
     position: fixed;
+
     left: 50%;
-    bottom: 8px;
+
+    bottom:
+        calc(7px + env(safe-area-inset-bottom));
+
     transform: translateX(-50%);
-    color: rgba(255,255,255,.65);
+
+    color:
+        rgba(255,255,255,.62);
+
     font-size: 11px;
-    z-index: 4;
+
+    z-index: 25;
+
     pointer-events: none;
+
+    white-space: nowrap;
 }
 
+/* =====================================================
+   CHAT
+===================================================== */
+
+#chat {
+    position: fixed;
+
+    left: 12px;
+
+    top: 90px;
+
+    width: min(290px, 48vw);
+
+    z-index: 50;
+
+    pointer-events: auto;
+}
+
+#chatMessages {
+    max-height: 145px;
+
+    overflow: hidden;
+
+    color: white;
+
+    font-size: 12px;
+
+    text-shadow:
+        0 1px 3px black;
+}
+
+.chatLine {
+    margin-bottom: 3px;
+
+    word-break: break-word;
+}
+
+.chatName {
+    font-weight: bold;
+}
+
+#chatForm {
+    display: flex;
+
+    margin-top: 5px;
+
+    gap: 4px;
+}
+
+#chatInput {
+    min-width: 0;
+
+    flex: 1;
+
+    height: 30px;
+
+    border: 1px solid rgba(255,255,255,.25);
+
+    border-radius: 8px;
+
+    background: rgba(0,0,0,.38);
+
+    color: white;
+
+    padding: 0 8px;
+
+    outline: none;
+
+    font-size: 12px;
+}
+
+#chatSend {
+    width: 42px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: rgba(255,255,255,.2);
+
+    color: white;
+}
+
+/* =====================================================
+   PLAYER LIST
+===================================================== */
+
+#playerList {
+    position: fixed;
+
+    right: 10px;
+
+    top: 85px;
+
+    z-index: 20;
+
+    color: white;
+
+    font-size: 11px;
+
+    text-align: right;
+
+    pointer-events: none;
+
+    text-shadow:
+        0 1px 3px black;
+}
+
+.teamBlue {
+    color: #75a5ff;
+}
+
+.teamRed {
+    color: #ff7070;
+}
+
+/* =====================================================
+   DISCONNECT
+===================================================== */
+
+#connection {
+    position: fixed;
+
+    left: 50%;
+
+    top: 5px;
+
+    transform: translateX(-50%);
+
+    z-index: 60;
+
+    display: none;
+
+    padding: 5px 10px;
+
+    border-radius: 8px;
+
+    background: rgba(180,0,0,.8);
+
+    color: white;
+
+    font-size: 11px;
+}
+
+/* =====================================================
+   DESKTOP
+===================================================== */
+
 @media (min-width: 900px) {
+
     #joystick {
         left: 40px;
         bottom: 40px;
@@ -148,6 +519,10 @@ html, body {
         right: 40px;
         bottom: 40px;
     }
+
+    #help {
+        bottom: 12px;
+    }
 }
 </style>
 </head>
@@ -156,847 +531,1356 @@ html, body {
 
 <canvas id="game"></canvas>
 
-<div id="scoreboard">
-    <div id="title">⚽ BALL HAX ONLINE</div>
-    <div id="score">0 - 0</div>
-    <div id="time">05:00</div>
+
+<!-- =====================================================
+     LOBBY
+===================================================== -->
+
+<div id="lobby">
+
+    <div class="lobbyBox">
+
+        <div class="lobbyBall">
+            ⚽
+        </div>
+
+        <div class="lobbyTitle">
+            BALL HAX ONLINE
+        </div>
+
+        <div class="lobbySubtitle">
+            Nhập tên của bạn để vào phòng
+        </div>
+
+        <input
+            id="nameInput"
+            maxlength="16"
+            autocomplete="off"
+            placeholder="Tên người chơi"
+        >
+
+        <button id="joinButton">
+            VÀO TRẬN
+        </button>
+
+        <div id="lobbyError"></div>
+
+    </div>
+
 </div>
+
+
+<!-- =====================================================
+     SCORE
+===================================================== -->
+
+<div id="scoreboard">
+
+    <div id="title">
+        ⚽ BALL HAX ONLINE
+    </div>
+
+    <div id="score">
+        0 - 0
+    </div>
+
+    <div id="time">
+        05:00
+    </div>
+
+    <div id="roundMode">
+        Vòng 1
+    </div>
+
+</div>
+
 
 <div id="status"></div>
 
-<div id="joystick">
-    <div id="stick"></div>
+<div id="connection">
+    Mất kết nối máy chủ
 </div>
 
-<button id="kick">ĐÁ</button>
+
+<!-- =====================================================
+     CHAT
+===================================================== -->
+
+<div id="chat">
+
+    <div id="chatMessages"></div>
+
+    <form id="chatForm">
+
+        <input
+            id="chatInput"
+            maxlength="80"
+            autocomplete="off"
+            placeholder="Chat..."
+        >
+
+        <button id="chatSend">
+            ➤
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- =====================================================
+     PLAYER LIST
+===================================================== -->
+
+<div id="playerList"></div>
+
+
+<!-- =====================================================
+     CONTROLS
+===================================================== -->
+
+<div id="joystick">
+
+    <div id="stick"></div>
+
+</div>
+
+
+<button id="kick">
+    ĐÁ
+</button>
+
 
 <div id="help">
     Kéo vòng tròn để di chuyển • Nhấn ĐÁ để sút
 </div>
 
+
 <script>
 "use strict";
 
-/* =========================================================
+/* =====================================================
    CANVAS
-========================================================= */
+===================================================== */
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas =
+    document.getElementById("game");
 
-let W = window.innerWidth;
-let H = window.innerHeight;
+const ctx =
+    canvas.getContext("2d");
+
+
+let W =
+    window.innerWidth;
+
+let H =
+    window.innerHeight;
+
+
+let DPR = 1;
+
 
 function resize() {
+
     W = window.innerWidth;
+
     H = window.innerHeight;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    DPR =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
 
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
+    canvas.width =
+        Math.floor(W * DPR);
 
-    canvas.style.width = W + "px";
-    canvas.style.height = H + "px";
+    canvas.height =
+        Math.floor(H * DPR);
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    canvas.style.width =
+        W + "px";
+
+    canvas.style.height =
+        H + "px";
+
+    ctx.setTransform(
+        DPR,
+        0,
+        0,
+        DPR,
+        0,
+        0
+    );
 }
 
-window.addEventListener("resize", resize);
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+
 resize();
 
-/* =========================================================
-   GAME WORLD
-========================================================= */
+
+/* =====================================================
+   WORLD
+===================================================== */
 
 const WORLD = {
-    width: 1100,
-    height: 560,
+
+    width: 1400,
+
+    height: 700,
+
+    goalHeight: 240,
 
     goalDepth: 70,
-    goalHeight: 190,
 
-    playerRadius: 15,
-    ballRadius: 10
+    playerRadius: 18,
+
+    ballRadius: 13
+
 };
 
-/* =========================================================
-   PHYSICS
-========================================================= */
 
-const PHYSICS = {
-
-    playerAcceleration: 0.10,
-    playerDamping: 0.96,
-
-    kickAcceleration: 0.07,
-    kickDamping: 0.96,
-
-    kickStrength: 5.0,
-
-    playerBounce: 0.5,
-    ballBounce: 0.5,
-
-    ballDamping: 0.99,
-
-    maxPlayerSpeed: 5.5,
-    maxBallSpeed: 15
-};
-
-/* =========================================================
+/* =====================================================
    GAME STATE
-========================================================= */
+===================================================== */
 
-let scoreRed = 0;
-let scoreBlue = 0;
+let myId = null;
 
-let gameSeconds = 300;
-let gameRunning = true;
+let myName = "";
 
-let lastTime = performance.now();
-let accumulator = 0;
+let joined = false;
 
-const FIXED_DT = 1 / 60;
+let gameState = {
 
-/* =========================================================
-   PLAYERS
-========================================================= */
+    W: WORLD.width,
 
-const players = [
-    {
-        id: 1,
-        team: "red",
-        x: -280,
-        y: 0,
-        vx: 0,
-        vy: 0,
-        radius: WORLD.playerRadius,
-        color: "#e94343",
-        name: "YOU"
+    H: WORLD.height,
+
+    score: {
+        blue: 0,
+        red: 0
     },
 
-    {
-        id: 2,
-        team: "blue",
-        x: 280,
-        y: 0,
-        vx: 0,
-        vy: 0,
-        radius: WORLD.playerRadius,
-        color: "#3d78ff",
-        name: "BOT"
-    }
-];
+    round: 1,
 
-/* =========================================================
-   BALL
-========================================================= */
+    mode: "normal",
 
-const ball = {
-    x: 0,
-    y: 0,
+    timeLeft: 300,
 
-    vx: 0,
-    vy: 0,
+    ball: {
+        x: 700,
+        y: 350
+    },
 
-    radius: WORLD.ballRadius
+    players: []
+
 };
 
-/* =========================================================
-   CONTROLS
-========================================================= */
+
+/* =====================================================
+   WEBSOCKET
+===================================================== */
+
+let socket = null;
+
+let reconnectTimer = null;
+
+
+function getSocketURL() {
+
+    const protocol =
+        location.protocol === "https:"
+        ? "wss:"
+        : "ws:";
+
+    return (
+        protocol +
+        "//" +
+        location.host
+    );
+}
+
+
+function connectSocket() {
+
+    if (
+        socket &&
+        (
+            socket.readyState ===
+            WebSocket.OPEN ||
+
+            socket.readyState ===
+            WebSocket.CONNECTING
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        socket =
+            new WebSocket(
+                getSocketURL()
+            );
+
+
+        socket.addEventListener(
+            "open",
+            () => {
+
+                document
+                    .getElementById(
+                        "connection"
+                    )
+                    .style.display =
+                    "none";
+
+
+                if (myName) {
+
+                    sendName();
+
+                }
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "message",
+            event => {
+
+                handleMessage(
+                    event.data
+                );
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "close",
+            () => {
+
+                document
+                    .getElementById(
+                        "connection"
+                    )
+                    .style.display =
+                    joined
+                    ? "block"
+                    : "none";
+
+
+                scheduleReconnect();
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "error",
+            () => {
+
+                document
+                    .getElementById(
+                        "connection"
+                    )
+                    .style.display =
+                    joined
+                    ? "block"
+                    : "none";
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.log(error);
+
+        scheduleReconnect();
+
+    }
+
+}
+
+
+function scheduleReconnect() {
+
+    if (reconnectTimer)
+        return;
+
+
+    reconnectTimer =
+        setTimeout(
+            () => {
+
+                reconnectTimer =
+                    null;
+
+                connectSocket();
+
+            },
+            2000
+        );
+
+}
+
+
+/* =====================================================
+   SERVER MESSAGE
+===================================================== */
+
+function handleMessage(raw) {
+
+    try {
+
+        const message =
+            JSON.parse(raw);
+
+
+        if (
+            message.type ===
+            "welcome"
+        ) {
+
+            myId =
+                String(message.id);
+
+            return;
+
+        }
+
+
+        if (
+            message.type ===
+            "state"
+        ) {
+
+            gameState =
+                message;
+
+            return;
+
+        }
+
+
+        if (
+            message.type ===
+            "chat"
+        ) {
+
+            addChatMessage(
+                message.name,
+                message.text
+            );
+
+            return;
+
+        }
+
+
+        if (
+            message.type ===
+            "error"
+        ) {
+
+            showLobbyError(
+                message.message ||
+                "Không thể vào phòng."
+            );
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Invalid server message",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   SEND
+===================================================== */
+
+function send(data) {
+
+    if (
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        return false;
+
+    }
+
+
+    try {
+
+        socket.send(
+            JSON.stringify(data)
+        );
+
+        return true;
+
+    } catch {
+
+        return false;
+
+    }
+
+}
+
+
+function sendName() {
+
+    if (!myName)
+        return;
+
+    send({
+
+        type: "name",
+
+        name: myName
+
+    });
+
+}
+
+
+/* =====================================================
+   LOBBY
+===================================================== */
+
+const lobby =
+    document.getElementById(
+        "lobby"
+    );
+
+const nameInput =
+    document.getElementById(
+        "nameInput"
+    );
+
+const joinButton =
+    document.getElementById(
+        "joinButton"
+    );
+
+const lobbyError =
+    document.getElementById(
+        "lobbyError"
+    );
+
+
+function showLobbyError(text) {
+
+    lobbyError.textContent =
+        text;
+
+}
+
+
+function joinGame() {
+
+    const name =
+        nameInput.value
+            .trim()
+            .replace(
+                /[<>]/g,
+                ""
+            )
+            .slice(0, 16);
+
+
+    if (!name) {
+
+        showLobbyError(
+            "Bạn chưa nhập tên."
+        );
+
+        nameInput.focus();
+
+        return;
+
+    }
+
+
+    myName =
+        name;
+
+
+    joined = true;
+
+
+    lobby.style.display =
+        "none";
+
+
+    connectSocket();
+
+
+    setTimeout(
+        sendName,
+        200
+    );
+
+}
+
+
+joinButton.addEventListener(
+    "click",
+    joinGame
+);
+
+
+nameInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            event.preventDefault();
+
+            joinGame();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   JOYSTICK
+===================================================== */
+
+const joystick =
+    document.getElementById(
+        "joystick"
+    );
+
+const stick =
+    document.getElementById(
+        "stick"
+    );
+
 
 const input = {
-    x: 0,
-    y: 0,
+
+    up: false,
+
+    down: false,
+
+    left: false,
+
+    right: false,
+
     kick: false
+
 };
 
-const joystick = document.getElementById("joystick");
-const stick = document.getElementById("stick");
 
-let joystickPointer = null;
+let joystickPointer =
+    null;
 
-function updateJoystick(clientX, clientY) {
 
-    const rect = joystick.getBoundingClientRect();
+function updateJoystick(
+    clientX,
+    clientY
+) {
 
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const rect =
+        joystick.getBoundingClientRect();
 
-    let dx = clientX - centerX;
-    let dy = clientY - centerY;
 
-    const max = rect.width / 2 - 30;
+    const centerX =
+        rect.left +
+        rect.width / 2;
 
-    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const centerY =
+        rect.top +
+        rect.height / 2;
+
+
+    let dx =
+        clientX -
+        centerX;
+
+
+    let dy =
+        clientY -
+        centerY;
+
+
+    const max =
+        rect.width / 2 -
+        30;
+
+
+    const distance =
+        Math.hypot(
+            dx,
+            dy
+        );
+
 
     if (distance > max) {
-        dx = dx / distance * max;
-        dy = dy / distance * max;
+
+        dx =
+            dx /
+            distance *
+            max;
+
+        dy =
+            dy /
+            distance *
+            max;
+
     }
 
-    input.x = dx / max;
-    input.y = dy / max;
 
-    stick.style.left = `calc(50% + ${dx}px)`;
-    stick.style.top = `calc(50% + ${dy}px)`;
+    const deadZone =
+        7;
+
+
+    if (
+        Math.hypot(dx, dy) <
+        deadZone
+    ) {
+
+        dx = 0;
+        dy = 0;
+
+    }
+
+
+    input.left =
+        dx < -max * .22;
+
+    input.right =
+        dx > max * .22;
+
+    input.up =
+        dy < -max * .22;
+
+    input.down =
+        dy > max * .22;
+
+
+    stick.style.left =
+        `calc(50% + ${dx}px)`;
+
+
+    stick.style.top =
+        `calc(50% + ${dy}px)`;
+
 }
+
 
 function resetJoystick() {
 
-    input.x = 0;
-    input.y = 0;
+    input.up = false;
+    input.down = false;
+    input.left = false;
+    input.right = false;
 
-    stick.style.left = "50%";
-    stick.style.top = "50%";
+
+    stick.style.left =
+        "50%";
+
+
+    stick.style.top =
+        "50%";
+
 }
 
-joystick.addEventListener("pointerdown", e => {
 
-    joystickPointer = e.pointerId;
+joystick.addEventListener(
+    "pointerdown",
+    event => {
 
-    joystick.setPointerCapture(e.pointerId);
+        event.preventDefault();
 
-    updateJoystick(e.clientX, e.clientY);
-});
+        joystickPointer =
+            event.pointerId;
 
-joystick.addEventListener("pointermove", e => {
 
-    if (e.pointerId !== joystickPointer) return;
+        joystick.setPointerCapture(
+            event.pointerId
+        );
 
-    updateJoystick(e.clientX, e.clientY);
-});
 
-joystick.addEventListener("pointerup", e => {
+        updateJoystick(
+            event.clientX,
+            event.clientY
+        );
 
-    if (e.pointerId !== joystickPointer) return;
+    }
+);
 
-    joystickPointer = null;
+
+joystick.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            event.pointerId !==
+            joystickPointer
+        )
+            return;
+
+
+        updateJoystick(
+            event.clientX,
+            event.clientY
+        );
+
+    }
+);
+
+
+function endJoystick(event) {
+
+    if (
+        event.pointerId !==
+        joystickPointer
+    )
+        return;
+
+
+    joystickPointer =
+        null;
+
 
     resetJoystick();
-});
 
-joystick.addEventListener("pointercancel", () => {
+}
 
-    joystickPointer = null;
 
-    resetJoystick();
-});
+joystick.addEventListener(
+    "pointerup",
+    endJoystick
+);
 
-/* =========================================================
+
+joystick.addEventListener(
+    "pointercancel",
+    endJoystick
+);
+
+
+/* =====================================================
    KICK
-========================================================= */
+===================================================== */
 
-const kickButton = document.getElementById("kick");
+const kickButton =
+    document.getElementById(
+        "kick"
+    );
 
-kickButton.addEventListener("pointerdown", e => {
 
-    e.preventDefault();
+function kickDown(event) {
+
+    event.preventDefault();
 
     input.kick = true;
 
-});
+    sendInput();
 
-kickButton.addEventListener("pointerup", e => {
+}
 
-    e.preventDefault();
 
-    input.kick = false;
+function kickUp(event) {
 
-});
-
-kickButton.addEventListener("pointercancel", () => {
+    event.preventDefault();
 
     input.kick = false;
 
-});
+    sendInput();
 
-/* =========================================================
-   KEYBOARD SUPPORT
-========================================================= */
+}
+
+
+kickButton.addEventListener(
+    "pointerdown",
+    kickDown
+);
+
+
+kickButton.addEventListener(
+    "pointerup",
+    kickUp
+);
+
+
+kickButton.addEventListener(
+    "pointercancel",
+    kickUp
+);
+
+
+kickButton.addEventListener(
+    "pointerleave",
+    kickUp
+);
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
 
 const keys = {};
 
-window.addEventListener("keydown", e => {
 
-    keys[e.key.toLowerCase()] = true;
+window.addEventListener(
+    "keydown",
+    event => {
 
-    if (
-        e.key === " " ||
-        e.key.startsWith("Arrow")
-    ) {
-        e.preventDefault();
+        keys[
+            event.key.toLowerCase()
+        ] = true;
+
+
+        if (
+            event.key.startsWith(
+                "Arrow"
+            ) ||
+            event.key === " "
+        ) {
+
+            event.preventDefault();
+
+        }
+
+
+        if (
+            event.key === " "
+        ) {
+
+            input.kick = true;
+
+            sendInput();
+
+        }
+
     }
+);
 
-});
 
-window.addEventListener("keyup", e => {
+window.addEventListener(
+    "keyup",
+    event => {
 
-    keys[e.key.toLowerCase()] = false;
+        keys[
+            event.key.toLowerCase()
+        ] = false;
 
-});
 
-function keyboardInput() {
+        if (
+            event.key === " "
+        ) {
 
-    let x = input.x;
-    let y = input.y;
+            input.kick = false;
 
-    if (keys["arrowleft"] || keys["a"]) x -= 1;
-    if (keys["arrowright"] || keys["d"]) x += 1;
-    if (keys["arrowup"] || keys["w"]) y -= 1;
-    if (keys["arrowdown"] || keys["s"]) y += 1;
+            sendInput();
 
-    const len = Math.sqrt(x*x + y*y);
+        }
 
-    if (len > 1) {
-        x /= len;
-        y /= len;
     }
+);
 
-    return { x, y };
-}
 
-/* =========================================================
-   MATH
-========================================================= */
+function updateKeyboard() {
 
-function clamp(value, min, max) {
+    const keyboard = {
 
-    return Math.max(min, Math.min(max, value));
+        up:
+            !!(
+                keys["arrowup"] ||
+                keys["w"]
+            ),
 
-}
+        down:
+            !!(
+                keys["arrowdown"] ||
+                keys["s"]
+            ),
 
-function distance(a, b) {
+        left:
+            !!(
+                keys["arrowleft"] ||
+                keys["a"]
+            ),
 
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
+        right:
+            !!(
+                keys["arrowright"] ||
+                keys["d"]
+            )
 
-    return Math.sqrt(dx * dx + dy * dy);
-
-}
-
-function normalize(x, y) {
-
-    const len = Math.sqrt(x*x + y*y);
-
-    if (len < 0.00001) {
-        return { x: 0, y: 0 };
-    }
-
-    return {
-        x: x / len,
-        y: y / len
     };
-}
 
-/* =========================================================
-   PLAYER MOVEMENT
-========================================================= */
-
-function updatePlayer(player, dt) {
-
-    let moveX = 0;
-    let moveY = 0;
-
-    if (player.id === 1) {
-
-        const k = keyboardInput();
-
-        moveX = k.x;
-        moveY = k.y;
-
-    } else {
-
-        /* Simple BOT */
-
-        const dx = ball.x - player.x;
-        const dy = ball.y - player.y;
-
-        const dir = normalize(dx, dy);
-
-        moveX = dir.x;
-        moveY = dir.y;
-
-        /*
-         * BOT doesn't constantly chase the ball
-         * too aggressively.
-         */
-        if (distance(player, ball) > 500) {
-            moveX = 0;
-            moveY = 0;
-        }
-    }
-
-    const moving =
-        Math.abs(moveX) > 0.01 ||
-        Math.abs(moveY) > 0.01;
-
-    const acceleration =
-        input.kick && player.id === 1
-        ? PHYSICS.kickAcceleration
-        : PHYSICS.playerAcceleration;
-
-    if (moving) {
-
-        player.vx += moveX * acceleration * 60 * dt;
-        player.vy += moveY * acceleration * 60 * dt;
-
-    }
-
-    const damping =
-        input.kick && player.id === 1
-        ? PHYSICS.kickDamping
-        : PHYSICS.playerDamping;
-
-    player.vx *= Math.pow(damping, dt * 60);
-    player.vy *= Math.pow(damping, dt * 60);
-
-    const speed =
-        Math.sqrt(
-            player.vx * player.vx +
-            player.vy * player.vy
-        );
-
-    if (speed > PHYSICS.maxPlayerSpeed) {
-
-        player.vx =
-            player.vx / speed *
-            PHYSICS.maxPlayerSpeed;
-
-        player.vy =
-            player.vy / speed *
-            PHYSICS.maxPlayerSpeed;
-    }
-
-    player.x += player.vx * 60 * dt;
-    player.y += player.vy * 60 * dt;
-
-    keepPlayerInside(player);
-}
-
-/* =========================================================
-   KEEP PLAYER INSIDE FIELD
-========================================================= */
-
-function keepPlayerInside(player) {
-
-    const halfW = WORLD.width / 2;
-    const halfH = WORLD.height / 2;
-
-    player.x = clamp(
-        player.x,
-        -halfW + player.radius,
-        halfW - player.radius
-    );
-
-    player.y = clamp(
-        player.y,
-        -halfH + player.radius,
-        halfH - player.radius
-    );
-}
-
-/* =========================================================
-   BALL PHYSICS
-========================================================= */
-
-function updateBall(dt) {
-
-    ball.vx *= Math.pow(PHYSICS.ballDamping, dt * 60);
-    ball.vy *= Math.pow(PHYSICS.ballDamping, dt * 60);
-
-    const speed =
-        Math.sqrt(
-            ball.vx * ball.vx +
-            ball.vy * ball.vy
-        );
-
-    if (speed > PHYSICS.maxBallSpeed) {
-
-        ball.vx =
-            ball.vx / speed *
-            PHYSICS.maxBallSpeed;
-
-        ball.vy =
-            ball.vy / speed *
-            PHYSICS.maxBallSpeed;
-    }
-
-    ball.x += ball.vx * 60 * dt;
-    ball.y += ball.vy * 60 * dt;
-
-    collideBallWithWalls();
-
-    collidePlayerWithBall(players[0]);
-
-    collidePlayerWithBall(players[1]);
-}
-
-/* =========================================================
-   BALL / WALL COLLISION
-========================================================= */
-
-function collideBallWithWalls() {
-
-    const halfW = WORLD.width / 2;
-    const halfH = WORLD.height / 2;
-
-    const goalTop =
-        WORLD.goalHeight / 2;
-
-    const goalBottom =
-        -WORLD.goalHeight / 2;
-
-    /* TOP */
-
-    if (ball.y - ball.radius < -halfH) {
-
-        ball.y = -halfH + ball.radius;
-
-        ball.vy =
-            Math.abs(ball.vy) *
-            PHYSICS.ballBounce;
-    }
-
-    /* BOTTOM */
-
-    if (ball.y + ball.radius > halfH) {
-
-        ball.y = halfH - ball.radius;
-
-        ball.vy =
-            -Math.abs(ball.vy) *
-            PHYSICS.ballBounce;
-    }
 
     /*
-     * LEFT WALL
-     * Leave opening for goal.
+     * Bàn phím chỉ bổ sung
+     * cho joystick.
      */
 
-    if (
-        ball.x - ball.radius < -halfW &&
-        (ball.y > goalTop || ball.y < goalBottom)
-    ) {
+    input.up =
+        input.up ||
+        keyboard.up;
 
-        ball.x = -halfW + ball.radius;
+    input.down =
+        input.down ||
+        keyboard.down;
 
-        ball.vx =
-            Math.abs(ball.vx) *
-            PHYSICS.ballBounce;
-    }
+    input.left =
+        input.left ||
+        keyboard.left;
 
-    /*
-     * RIGHT WALL
-     */
+    input.right =
+        input.right ||
+        keyboard.right;
 
-    if (
-        ball.x + ball.radius > halfW &&
-        (ball.y > goalTop || ball.y < goalBottom)
-    ) {
-
-        ball.x = halfW - ball.radius;
-
-        ball.vx =
-            -Math.abs(ball.vx) *
-            PHYSICS.ballBounce;
-    }
-
-    checkGoal();
 }
 
-/* =========================================================
-   PLAYER / BALL COLLISION
-========================================================= */
 
-function collidePlayerWithBall(player) {
+/* =====================================================
+   SEND INPUT
+===================================================== */
 
-    let dx = ball.x - player.x;
-    let dy = ball.y - player.y;
+let lastInputSend =
+    0;
 
-    let dist =
-        Math.sqrt(dx * dx + dy * dy);
 
-    const minDist =
-        player.radius +
-        ball.radius;
+function sendInput(force = false) {
 
-    if (dist === 0) {
+    const now =
+        performance.now();
 
-        dx = 1;
-        dy = 0;
-
-        dist = 1;
-    }
-
-    if (dist < minDist) {
-
-        const nx = dx / dist;
-        const ny = dy / dist;
-
-        const overlap =
-            minDist - dist;
-
-        ball.x += nx * overlap;
-        ball.y += ny * overlap;
-
-        const relativeVx =
-            ball.vx - player.vx;
-
-        const relativeVy =
-            ball.vy - player.vy;
-
-        const relativeVelocity =
-            relativeVx * nx +
-            relativeVy * ny;
-
-        if (relativeVelocity < 0) {
-
-            const impulse =
-                -(1 + PHYSICS.ballBounce) *
-                relativeVelocity;
-
-            ball.vx +=
-                nx * impulse;
-
-            ball.vy +=
-                ny * impulse;
-        }
-
-        /*
-         * Kick
-         */
-
-        if (
-            player.id === 1 &&
-            input.kick
-        ) {
-
-            const kickDirection =
-                normalize(
-                    ball.x - player.x,
-                    ball.y - player.y
-                );
-
-            ball.vx +=
-                kickDirection.x *
-                PHYSICS.kickStrength;
-
-            ball.vy +=
-                kickDirection.y *
-                PHYSICS.kickStrength;
-
-            player.vx -=
-                kickDirection.x * 0.25;
-
-            player.vy -=
-                kickDirection.y * 0.25;
-        }
-
-        /*
-         * BOT kick
-         */
-
-        if (
-            player.id === 2 &&
-            distance(player, ball) < minDist + 4
-        ) {
-
-            const direction =
-                normalize(
-                    -ball.x,
-                    -ball.y
-                );
-
-            ball.vx +=
-                direction.x * 3;
-
-            ball.vy +=
-                direction.y * 3;
-        }
-    }
-}
-
-/* =========================================================
-   GOAL
-========================================================= */
-
-function checkGoal() {
-
-    const halfW =
-        WORLD.width / 2;
-
-    const goalHalf =
-        WORLD.goalHeight / 2;
 
     if (
-        ball.x < -halfW &&
-        Math.abs(ball.y) < goalHalf
+        !force &&
+        now - lastInputSend <
+        30
     ) {
-
-        scoreBlue++;
-
-        updateScore();
-
-        goal("BLUE");
 
         return;
+
     }
 
-    if (
-        ball.x > halfW &&
-        Math.abs(ball.y) < goalHalf
+
+    lastInputSend =
+        now;
+
+
+    send({
+
+        type: "input",
+
+        up: !!input.up,
+
+        down: !!input.down,
+
+        left: !!input.left,
+
+        right: !!input.right,
+
+        kick: !!input.kick
+
+    });
+
+}
+
+
+/* =====================================================
+   CHAT
+===================================================== */
+
+const chatForm =
+    document.getElementById(
+        "chatForm"
+    );
+
+const chatInput =
+    document.getElementById(
+        "chatInput"
+    );
+
+const chatMessages =
+    document.getElementById(
+        "chatMessages"
+    );
+
+
+chatForm.addEventListener(
+    "submit",
+    event => {
+
+        event.preventDefault();
+
+
+        const text =
+            chatInput.value
+                .trim()
+                .slice(0, 80);
+
+
+        if (!text)
+            return;
+
+
+        send({
+
+            type: "chat",
+
+            text
+
+        });
+
+
+        chatInput.value =
+            "";
+
+    }
+);
+
+
+function addChatMessage(
+    name,
+    text
+) {
+
+    const line =
+        document.createElement(
+            "div"
+        );
+
+
+    line.className =
+        "chatLine";
+
+
+    const nameElement =
+        document.createElement(
+            "span"
+        );
+
+
+    nameElement.className =
+        "chatName";
+
+
+    nameElement.textContent =
+        name + ": ";
+
+
+    const textElement =
+        document.createElement(
+            "span"
+        );
+
+
+    textElement.textContent =
+        text;
+
+
+    line.appendChild(
+        nameElement
+    );
+
+
+    line.appendChild(
+        textElement
+    );
+
+
+    chatMessages.appendChild(
+        line
+    );
+
+
+    while (
+        chatMessages.children.length >
+        8
     ) {
 
-        scoreRed++;
+        chatMessages.removeChild(
+            chatMessages.firstChild
+        );
 
-        updateScore();
-
-        goal("RED");
-
-        return;
-    }
-}
-
-/* =========================================================
-   RESET AFTER GOAL
-========================================================= */
-
-function goal(team) {
-
-    gameRunning = false;
-
-    const status =
-        document.getElementById("status");
-
-    status.textContent =
-        team + " GOOOOOL!";
-
-    status.style.display = "block";
-
-    setTimeout(() => {
-
-        resetPositions();
-
-        status.style.display = "none";
-
-        gameRunning = true;
-
-    }, 1200);
-}
-
-function resetPositions() {
-
-    players[0].x = -280;
-    players[0].y = 0;
-
-    players[1].x = 280;
-    players[1].y = 0;
-
-    players[0].vx = 0;
-    players[0].vy = 0;
-
-    players[1].vx = 0;
-    players[1].vy = 0;
-
-    ball.x = 0;
-    ball.y = 0;
-
-    ball.vx = 0;
-    ball.vy = 0;
-}
-
-/* =========================================================
-   SCORE
-========================================================= */
-
-function updateScore() {
-
-    document.getElementById("score").textContent =
-        `${scoreRed} - ${scoreBlue}`;
-}
-
-/* =========================================================
-   CLOCK
-========================================================= */
-
-function updateClock(dt) {
-
-    if (!gameRunning) return;
-
-    gameSeconds -= dt;
-
-    if (gameSeconds < 0) {
-        gameSeconds = 0;
-        gameRunning = false;
     }
 
-    const minutes =
-        Math.floor(gameSeconds / 60);
 
-    const seconds =
-        Math.floor(gameSeconds % 60);
+    setTimeout(
+        () => {
 
-    document.getElementById("time").textContent =
-        String(minutes).padStart(2, "0") +
-        ":" +
-        String(seconds).padStart(2, "0");
+            if (line.parentNode) {
+
+                line.style.opacity =
+                    "0.35";
+
+            }
+
+        },
+        7000
+    );
+
 }
 
-/* =========================================================
-   WORLD -> SCREEN
-========================================================= */
+
+/* =====================================================
+   GAME SCALE
+===================================================== */
 
 function getScale() {
 
-    const margin = 20;
+    const marginX = 18;
+
+    /*
+     * Chừa chỗ scoreboard và
+     * nút điều khiển.
+     */
+
+    const availableWidth =
+        W -
+        marginX * 2;
+
+
+    const availableHeight =
+        H -
+        105;
+
 
     return Math.min(
-        (W - margin * 2) / WORLD.width,
-        (H - 90) / WORLD.height
+
+        availableWidth /
+        WORLD.width,
+
+        availableHeight /
+        WORLD.height
+
     );
+
 }
 
-function worldToScreen(x, y) {
 
-    const scale = getScale();
+/* =====================================================
+   WORLD TO SCREEN
+===================================================== */
 
-    return {
-        x: W / 2 + x * scale,
-        y: H / 2 + y * scale
-    };
-}
+function worldToScreen(
+    x,
+    y
+) {
 
-/* =========================================================
-   DRAW FIELD
-========================================================= */
+    const scale =
+        getScale();
 
-function drawField() {
 
-    ctx.clearRect(0, 0, W, H);
-
-    const scale = getScale();
+    /*
+     * Server dùng:
+     *
+     * x = 0 -> biên trái
+     * x = 1400 -> biên phải
+     *
+     * y = 0 -> trên
+     * y = 700 -> dưới
+     */
 
     const left =
         W / 2 -
-        WORLD.width / 2 * scale;
+        WORLD.width *
+        scale / 2;
+
 
     const top =
         H / 2 -
-        WORLD.height / 2 * scale;
+        WORLD.height *
+        scale / 2;
+
+
+    return {
+
+        x:
+            left +
+            x * scale,
+
+        y:
+            top +
+            y * scale
+
+    };
+
+}
+
+
+/* =====================================================
+   FIELD
+===================================================== */
+
+function drawField() {
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    const scale =
+        getScale();
+
+
+    const left =
+        W / 2 -
+        WORLD.width *
+        scale / 2;
+
+
+    const top =
+        H / 2 -
+        WORLD.height *
+        scale / 2;
+
 
     const width =
-        WORLD.width * scale;
+        WORLD.width *
+        scale;
+
 
     const height =
-        WORLD.height * scale;
+        WORLD.height *
+        scale;
+
 
     /*
      * Grass
      */
 
-    ctx.fillStyle = "#159447";
+    ctx.fillStyle =
+        "#168f47";
+
 
     ctx.fillRect(
         left,
@@ -1005,33 +1889,60 @@ function drawField() {
         height
     );
 
+
     /*
      * Grass stripes
      */
 
-    for (let i = 0; i < 10; i++) {
+    const stripeCount =
+        14;
+
+
+    for (
+        let i = 0;
+        i < stripeCount;
+        i++
+    ) {
 
         ctx.fillStyle =
             i % 2 === 0
             ? "rgba(255,255,255,.025)"
             : "rgba(0,0,0,.025)";
 
+
         ctx.fillRect(
-            left + i * width / 10,
+
+            left +
+            i *
+            width /
+            stripeCount,
+
             top,
-            width / 10,
+
+            width /
+            stripeCount,
+
             height
+
         );
+
     }
 
+
     /*
-     * Outer border
+     * Outer lines
      */
 
     ctx.strokeStyle =
-        "rgba(255,255,255,.85)";
+        "rgba(255,255,255,.9)";
 
-    ctx.lineWidth = 3;
+
+    ctx.lineWidth =
+        Math.max(
+            2,
+            3 * scale
+        );
+
 
     ctx.strokeRect(
         left,
@@ -1040,8 +1951,9 @@ function drawField() {
         height
     );
 
+
     /*
-     * Halfway line
+     * Halfway
      */
 
     ctx.beginPath();
@@ -1058,6 +1970,7 @@ function drawField() {
 
     ctx.stroke();
 
+
     /*
      * Center circle
      */
@@ -1067,12 +1980,13 @@ function drawField() {
     ctx.arc(
         W / 2,
         H / 2,
-        90 * scale,
+        92 * scale,
         0,
         Math.PI * 2
     );
 
     ctx.stroke();
+
 
     /*
      * Center point
@@ -1083,167 +1997,257 @@ function drawField() {
     ctx.arc(
         W / 2,
         H / 2,
-        4,
+        Math.max(
+            2.5,
+            4 * scale
+        ),
         0,
         Math.PI * 2
     );
 
-    ctx.fillStyle = "white";
+    ctx.fillStyle =
+        "white";
 
     ctx.fill();
 
-    drawPenaltyAreas(scale);
 
-    drawGoals(scale);
+    drawPenaltyAreas(
+        scale,
+        left,
+        top
+    );
+
+
+    drawGoals(
+        scale,
+        left,
+        top
+    );
+
 }
 
-/* =========================================================
+
+/* =====================================================
    PENALTY AREAS
-========================================================= */
+===================================================== */
 
-function drawPenaltyAreas(scale) {
+function drawPenaltyAreas(
+    scale,
+    left,
+    top
+) {
 
-    const halfW =
-        WORLD.width / 2;
+    const boxWidth =
+        180;
 
-    const halfH =
-        WORLD.height / 2;
+    const boxHeight =
+        360;
 
-    const boxW = 150;
-    const boxH = 280;
 
-    const top =
-        H / 2 -
-        boxH / 2 * scale;
+    const y =
+        350 -
+        boxHeight / 2;
 
-    const h =
-        boxH * scale;
 
     ctx.strokeStyle =
-        "rgba(255,255,255,.75)";
+        "rgba(255,255,255,.78)";
 
-    ctx.lineWidth = 2;
+
+    ctx.lineWidth =
+        Math.max(
+            2,
+            2 * scale
+        );
+
 
     /*
-     * LEFT
+     * Left
      */
 
     ctx.strokeRect(
-        W / 2 +
-        (-halfW) * scale,
-        top,
-        boxW * scale,
-        h
+
+        left,
+
+        top +
+        y * scale,
+
+        boxWidth *
+        scale,
+
+        boxHeight *
+        scale
+
     );
 
+
     /*
-     * RIGHT
+     * Right
      */
 
     ctx.strokeRect(
-        W / 2 +
-        (halfW - boxW) * scale,
-        top,
-        boxW * scale,
-        h
+
+        left +
+        (WORLD.width -
+        boxWidth) *
+        scale,
+
+        top +
+        y * scale,
+
+        boxWidth *
+        scale,
+
+        boxHeight *
+        scale
+
     );
+
 }
 
-/* =========================================================
+
+/* =====================================================
    GOALS
-========================================================= */
+===================================================== */
 
-function drawGoals(scale) {
+function drawGoals(
+    scale,
+    left,
+    top
+) {
 
-    const halfW =
-        WORLD.width / 2;
-
-    const goalH =
+    const goalHeight =
         WORLD.goalHeight;
+
 
     const goalDepth =
         WORLD.goalDepth;
 
-    const top =
-        H / 2 -
-        goalH / 2 * scale;
 
-    const height =
-        goalH * scale;
+    const goalY =
+        350 -
+        goalHeight / 2;
 
-    ctx.lineWidth = 4;
 
     /*
      * LEFT GOAL
      */
 
-    const leftX =
-        W / 2 -
-        halfW * scale;
-
     ctx.fillStyle =
         "rgba(255,255,255,.13)";
 
+
     ctx.fillRect(
-        leftX - goalDepth * scale,
-        top,
+
+        left -
         goalDepth * scale,
-        height
+
+        top +
+        goalY * scale,
+
+        goalDepth * scale,
+
+        goalHeight * scale
+
     );
 
-    ctx.strokeStyle = "#eeeeee";
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.95)";
+
+
+    ctx.lineWidth =
+        Math.max(
+            2,
+            3 * scale
+        );
+
 
     ctx.strokeRect(
-        leftX - goalDepth * scale,
-        top,
+
+        left -
         goalDepth * scale,
-        height
+
+        top +
+        goalY * scale,
+
+        goalDepth * scale,
+
+        goalHeight * scale
+
     );
+
 
     /*
      * RIGHT GOAL
      */
 
-    const rightX =
-        W / 2 +
-        halfW * scale;
-
     ctx.fillStyle =
         "rgba(255,255,255,.13)";
 
+
     ctx.fillRect(
-        rightX,
-        top,
+
+        left +
+        WORLD.width *
+        scale,
+
+        top +
+        goalY * scale,
+
         goalDepth * scale,
-        height
+
+        goalHeight * scale
+
     );
 
-    ctx.strokeStyle = "#eeeeee";
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.95)";
+
 
     ctx.strokeRect(
-        rightX,
-        top,
+
+        left +
+        WORLD.width *
+        scale,
+
+        top +
+        goalY * scale,
+
         goalDepth * scale,
-        height
+
+        goalHeight * scale
+
     );
+
 }
 
-/* =========================================================
-   DRAW BALL
-========================================================= */
+
+/* =====================================================
+   BALL
+===================================================== */
 
 function drawBall() {
 
+    if (!gameState.ball)
+        return;
+
+
     const p =
         worldToScreen(
-            ball.x,
-            ball.y
+            gameState.ball.x,
+            gameState.ball.y
         );
 
-    const scale = getScale();
 
-    const r =
-        ball.radius * scale;
+    const scale =
+        getScale();
+
+
+    const radius =
+        WORLD.ballRadius *
+        scale;
+
 
     /*
      * Shadow
@@ -1251,68 +2255,183 @@ function drawBall() {
 
     ctx.beginPath();
 
-    ctx.arc(
+    ctx.ellipse(
+
         p.x + 2,
-        p.y + 3,
-        r,
+
+        p.y + 4,
+
+        radius * 1.05,
+
+        radius * .7,
+
         0,
+
+        0,
+
         Math.PI * 2
+
     );
 
+
     ctx.fillStyle =
-        "rgba(0,0,0,.25)";
+        "rgba(0,0,0,.28)";
 
     ctx.fill();
 
+
     /*
-     * Ball
+     * White ball
      */
 
     ctx.beginPath();
 
     ctx.arc(
+
         p.x,
+
         p.y,
-        r,
+
+        radius,
+
         0,
+
         Math.PI * 2
+
     );
 
-    ctx.fillStyle = "#ffffff";
+
+    ctx.fillStyle =
+        "#f5f5f5";
 
     ctx.fill();
 
-    ctx.strokeStyle =
-        "rgba(0,0,0,.7)";
 
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle =
+        "#222";
+
+    ctx.lineWidth =
+        Math.max(
+            1,
+            1.5 * scale
+        );
 
     ctx.stroke();
 
+
     /*
-     * Small black center
+     * HaxBall-style
+     * simple black details
      */
+
+    ctx.fillStyle =
+        "#222";
+
+
+    /*
+     * Center pentagon-like mark
+     */
+
+    drawBallPatch(
+        p.x,
+        p.y,
+        radius * .28
+    );
+
+
+    /*
+     * Small patches
+     */
+
+    const patches = [
+
+        [-.58, -.28],
+
+        [.58, -.28],
+
+        [-.48, .52],
+
+        [.48, .52]
+
+    ];
+
+
+    for (
+        const patch of patches
+    ) {
+
+        drawBallPatch(
+
+            p.x +
+            patch[0] *
+            radius,
+
+            p.y +
+            patch[1] *
+            radius,
+
+            radius * .13
+
+        );
+
+    }
+
+}
+
+
+function drawBallPatch(
+    x,
+    y,
+    r
+) {
 
     ctx.beginPath();
 
-    ctx.arc(
-        p.x,
-        p.y,
-        r * .23,
-        0,
-        Math.PI * 2
-    );
+    for (
+        let i = 0;
+        i < 5;
+        i++
+    ) {
 
-    ctx.fillStyle = "#222";
+        const angle =
+            -Math.PI / 2 +
+            i *
+            Math.PI * 2 / 5;
+
+
+        const px =
+            x +
+            Math.cos(angle) *
+            r;
+
+
+        const py =
+            y +
+            Math.sin(angle) *
+            r;
+
+
+        if (i === 0)
+            ctx.moveTo(px, py);
+        else
+            ctx.lineTo(px, py);
+
+    }
+
+    ctx.closePath();
 
     ctx.fill();
+
 }
 
-/* =========================================================
-   DRAW PLAYER
-========================================================= */
 
-function drawPlayer(player) {
+/* =====================================================
+   PLAYER DISC
+===================================================== */
+
+function drawPlayer(
+    player
+) {
 
     const p =
         worldToScreen(
@@ -1320,10 +2439,20 @@ function drawPlayer(player) {
             player.y
         );
 
-    const scale = getScale();
+
+    const scale =
+        getScale();
+
 
     const r =
-        player.radius * scale;
+        WORLD.playerRadius *
+        scale;
+
+
+    const isMe =
+        String(player.id) ===
+        String(myId);
+
 
     /*
      * Shadow
@@ -1331,313 +2460,620 @@ function drawPlayer(player) {
 
     ctx.beginPath();
 
-    ctx.arc(
+    ctx.ellipse(
+
         p.x + 2,
-        p.y + 3,
-        r,
+
+        p.y + 4,
+
+        r * 1.05,
+
+        r * .72,
+
         0,
+
+        0,
+
         Math.PI * 2
+
     );
 
+
     ctx.fillStyle =
-        "rgba(0,0,0,.25)";
+        "rgba(0,0,0,.3)";
 
     ctx.fill();
 
+
     /*
-     * Player body
+     * Outer disc
      */
 
     ctx.beginPath();
 
     ctx.arc(
+
         p.x,
+
         p.y,
+
         r,
+
         0,
+
         Math.PI * 2
+
     );
 
-    ctx.fillStyle =
-        player.color;
+
+    if (
+        player.team ===
+        "red"
+    ) {
+
+        ctx.fillStyle =
+            "#e94343";
+
+    } else {
+
+        ctx.fillStyle =
+            "#3d78ff";
+
+    }
+
 
     ctx.fill();
 
-    ctx.strokeStyle = "white";
 
-    ctx.lineWidth = 2;
+    /*
+     * White outline
+     */
+
+    ctx.strokeStyle =
+        isMe
+        ? "#ffffff"
+        : "rgba(255,255,255,.72)";
+
+
+    ctx.lineWidth =
+        isMe
+        ? Math.max(
+            2.5,
+            3 * scale
+        )
+        : Math.max(
+            1.5,
+            2 * scale
+        );
+
 
     ctx.stroke();
 
+
     /*
-     * Direction indicator
+     * Inner highlight
      */
 
-    let dx = player.vx;
-    let dy = player.vy;
+    ctx.beginPath();
 
-    const len =
-        Math.sqrt(dx*dx + dy*dy);
+    ctx.arc(
 
-    if (len > .1) {
+        p.x -
+        r * .25,
 
-        dx /= len;
-        dy /= len;
+        p.y -
+        r * .25,
+
+        r * .52,
+
+        Math.PI,
+
+        Math.PI * 1.5
+
+    );
+
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.22)";
+
+
+    ctx.lineWidth =
+        Math.max(
+            1,
+            2 * scale
+        );
+
+
+    ctx.stroke();
+
+
+    /*
+     * Tên
+     */
+
+    ctx.font =
+        `bold ${
+            Math.max(
+                9,
+                11 * scale
+            )
+        }px Arial`;
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.textBaseline =
+        "middle";
+
+
+    ctx.fillStyle =
+        "white";
+
+
+    ctx.shadowColor =
+        "rgba(0,0,0,.9)";
+
+
+    ctx.shadowBlur =
+        3;
+
+
+    ctx.fillText(
+
+        String(
+            player.name ||
+            "Player"
+        ).slice(0,16),
+
+        p.x,
+
+        p.y -
+        r -
+        9
+
+    );
+
+
+    ctx.shadowBlur =
+        0;
+
+
+    /*
+     * Viền sáng quanh người chơi
+     * của chính mình.
+     */
+
+    if (isMe) {
 
         ctx.beginPath();
 
-        ctx.moveTo(
+        ctx.arc(
+
             p.x,
-            p.y
+
+            p.y,
+
+            r + 5,
+
+            0,
+
+            Math.PI * 2
+
         );
 
-        ctx.lineTo(
-            p.x + dx * r * .75,
-            p.y + dy * r * .75
-        );
 
         ctx.strokeStyle =
-            "rgba(255,255,255,.8)";
+            "rgba(255,255,255,.35)";
+
 
         ctx.lineWidth = 2;
 
         ctx.stroke();
+
     }
 
-    /*
-     * Name
-     */
-
-    if (player.id === 1) {
-
-        ctx.font =
-            "bold 10px Arial";
-
-        ctx.textAlign = "center";
-
-        ctx.fillStyle = "white";
-
-        ctx.fillText(
-            player.name,
-            p.x,
-            p.y - r - 6
-        );
-    }
 }
 
-/* =========================================================
-   DRAW
-========================================================= */
+
+/* =====================================================
+   PLAYER LIST
+===================================================== */
+
+function updatePlayerList() {
+
+    const element =
+        document.getElementById(
+            "playerList"
+        );
+
+
+    const players =
+        gameState.players ||
+        [];
+
+
+    let blue = [];
+
+    let red = [];
+
+
+    for (
+        const player of players
+    ) {
+
+        if (
+            player.team ===
+            "blue"
+        ) {
+
+            blue.push(player);
+
+        } else {
+
+            red.push(player);
+
+        }
+
+    }
+
+
+    let html = "";
+
+
+    html +=
+        `<div class="teamBlue">
+            🔵 ${blue.length}
+        </div>`;
+
+
+    html +=
+        `<div class="teamRed">
+            🔴 ${red.length}
+        </div>`;
+
+
+    element.innerHTML =
+        html;
+
+}
+
+
+/* =====================================================
+   SCOREBOARD
+===================================================== */
+
+function updateScoreboard() {
+
+    const score =
+        gameState.score ||
+        {
+            blue: 0,
+            red: 0
+        };
+
+
+    document.getElementById(
+        "score"
+    ).textContent =
+        `${score.blue} - ${score.red}`;
+
+
+    let time =
+        Number(
+            gameState.timeLeft
+        );
+
+
+    if (
+        !Number.isFinite(time)
+    ) {
+
+        time = 300;
+
+    }
+
+
+    time =
+        Math.max(
+            0,
+            time
+        );
+
+
+    const minutes =
+        Math.floor(
+            time / 60
+        );
+
+
+    const seconds =
+        Math.floor(
+            time % 60
+        );
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+
+        String(minutes)
+            .padStart(2, "0") +
+
+        ":" +
+
+        String(seconds)
+            .padStart(2, "0");
+
+
+    const mode =
+        gameState.mode;
+
+
+    const round =
+        gameState.round ||
+        1;
+
+
+    document.getElementById(
+        "roundMode"
+    ).textContent =
+
+        mode === "golden"
+
+        ? `Vòng ${round} • CƠ HỘI VÀNG`
+
+        : `Vòng ${round}`;
+
+}
+
+
+/* =====================================================
+   GOAL / MODE STATUS
+===================================================== */
+
+let previousMode =
+    "normal";
+
+
+let previousScoreBlue =
+    0;
+
+
+let previousScoreRed =
+    0;
+
+
+function detectEvents() {
+
+    const mode =
+        gameState.mode;
+
+
+    const blue =
+        gameState.score.blue;
+
+
+    const red =
+        gameState.score.red;
+
+
+    if (
+        mode !==
+        previousMode
+    ) {
+
+        if (
+            mode ===
+            "golden"
+        ) {
+
+            showStatus(
+                "⚡ CƠ HỘI VÀNG ⚡",
+                2200
+            );
+
+        }
+
+    }
+
+
+    if (
+        blue !==
+        previousScoreBlue
+    ) {
+
+        showStatus(
+            "🔵 GOOOOOL!",
+            1200
+        );
+
+    }
+
+
+    if (
+        red !==
+        previousScoreRed
+    ) {
+
+        showStatus(
+            "🔴 GOOOOOL!",
+            1200
+        );
+
+    }
+
+
+    previousMode =
+        mode;
+
+
+    previousScoreBlue =
+        blue;
+
+
+    previousScoreRed =
+        red;
+
+}
+
+
+let statusTimer =
+    null;
+
+
+function showStatus(
+    text,
+    duration
+) {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.textContent =
+        text;
+
+
+    status.style.display =
+        "block";
+
+
+    clearTimeout(
+        statusTimer
+    );
+
+
+    statusTimer =
+        setTimeout(
+            () => {
+
+                status.style.display =
+                    "none";
+
+            },
+            duration
+        );
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
 
 function render() {
 
     drawField();
 
-    drawPlayer(players[0]);
 
-    drawPlayer(players[1]);
+    const players =
+        gameState.players ||
+        [];
+
+
+    /*
+     * Vẽ cầu thủ trước
+     */
+
+    for (
+        const player of players
+    ) {
+
+        drawPlayer(player);
+
+    }
+
+
+    /*
+     * Bóng nằm trên cầu thủ
+     * để dễ nhìn.
+     */
 
     drawBall();
+
+
+    updateScoreboard();
+
+    updatePlayerList();
+
+    detectEvents();
+
 }
 
-/* =========================================================
-   WEBSOCKET
-========================================================= */
 
-/*
- * WebSocket is optional.
- *
- * The game can still run locally if the server
- * doesn't provide a WebSocket endpoint.
- */
+/* =====================================================
+   INPUT LOOP
+===================================================== */
 
-let socket = null;
+let lastInputTick =
+    0;
 
-function connectSocket() {
 
-    try {
+function inputLoop(now) {
 
-        const protocol =
-            location.protocol === "https:"
-            ? "wss:"
-            : "ws:";
+    updateKeyboard();
 
-        socket =
-            new WebSocket(
-                protocol +
-                "//" +
-                location.host
-            );
-
-        socket.addEventListener("open", () => {
-
-            console.log(
-                "WebSocket connected"
-            );
-
-            socket.send(
-                JSON.stringify({
-                    type: "join",
-                    name: "YOU"
-                })
-            );
-        });
-
-        socket.addEventListener("message", event => {
-
-            try {
-
-                const data =
-                    JSON.parse(event.data);
-
-                /*
-                 * Compatible with simple
-                 * state broadcasts.
-                 */
-
-                if (data.type === "state") {
-
-                    if (data.ball) {
-
-                        ball.x =
-                            Number(data.ball.x) ||
-                            ball.x;
-
-                        ball.y =
-                            Number(data.ball.y) ||
-                            ball.y;
-                    }
-                }
-
-            } catch (err) {
-
-                console.log(
-                    "Server message:",
-                    event.data
-                );
-            }
-        });
-
-        socket.addEventListener("error", err => {
-
-            console.log(
-                "WebSocket unavailable",
-                err
-            );
-
-        });
-
-    } catch (err) {
-
-        console.log(
-            "WebSocket not available"
-        );
-    }
-}
-
-function sendState() {
 
     if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
+        now -
+        lastInputTick >
+        40
     ) {
-        return;
+
+        sendInput();
+
+        lastInputTick =
+            now;
+
     }
 
-    try {
 
-        socket.send(
-            JSON.stringify({
-                type: "state",
-
-                player: {
-                    x: players[0].x,
-                    y: players[0].y,
-                    vx: players[0].vx,
-                    vy: players[0].vy
-                },
-
-                ball: {
-                    x: ball.x,
-                    y: ball.y,
-                    vx: ball.vx,
-                    vy: ball.vy
-                },
-
-                score: {
-                    red: scoreRed,
-                    blue: scoreBlue
-                }
-            })
-        );
-
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-/* =========================================================
-   GAME LOOP
-========================================================= */
-
-function update(dt) {
-
-    if (!gameRunning) return;
-
-    updatePlayer(
-        players[0],
-        dt
+    requestAnimationFrame(
+        inputLoop
     );
 
-    updatePlayer(
-        players[1],
-        dt
-    );
-
-    updateBall(dt);
-
-    updateClock(dt);
 }
 
-function gameLoop(now) {
 
-    let frameTime =
-        (now - lastTime) / 1000;
-
-    lastTime = now;
-
-    frameTime =
-        Math.min(frameTime, 0.1);
-
-    accumulator += frameTime;
-
-    while (accumulator >= FIXED_DT) {
-
-        update(FIXED_DT);
-
-        accumulator -= FIXED_DT;
-    }
-
-    render();
-
-    sendState();
-
-    requestAnimationFrame(gameLoop);
-}
-
-/* =========================================================
+/* =====================================================
    START
-========================================================= */
+===================================================== */
 
-resetPositions();
+nameInput.focus();
 
-updateScore();
 
 connectSocket();
 
-requestAnimationFrame(gameLoop);
+
+requestAnimationFrame(
+    inputLoop
+);
+
+
+/* =====================================================
+   GAME RENDER LOOP
+===================================================== */
+
+function renderLoop() {
+
+    render();
+
+    requestAnimationFrame(
+        renderLoop
+    );
+
+}
+
+
+requestAnimationFrame(
+    renderLoop
+);
 
 </script>
 
 </body>
-</html>
+      </html>
