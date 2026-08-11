@@ -1,11 +1,294 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Ball Hax Online</title>
-<style>*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Arial;background:#07131d;color:#fff}#lobby{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#087cff,#00bd87)}.card{width:min(430px,92vw);background:#fffffff2;color:#123;padding:25px;border-radius:25px;text-align:center;box-shadow:0 15px 50px #0006}h1{font-size:38px;margin:0 0 8px}input{width:100%;padding:14px;border:2px solid #ddd;border-radius:13px;font-size:18px;margin:10px 0}button{width:100%;padding:14px;border:0;border-radius:13px;background:#087cff;color:#fff;font-size:18px;font-weight:bold}#game{display:none;position:fixed;inset:0}canvas{width:100%;height:100%;display:block}#top{position:absolute;top:8px;left:0;right:0;text-align:center;font-weight:bold;font-size:20px;text-shadow:0 2px 4px #000;pointer-events:none}#hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-weight:bold;text-shadow:0 2px 4px #000;pointer-events:none}#joy{position:absolute;left:20px;bottom:45px;width:125px;height:125px;border:2px solid #ffffff55;border-radius:50%;background:#ffffff18}#knob{position:absolute;left:38px;top:38px;width:45px;height:45px;border-radius:50%;background:#fff9}@media(min-width:800px){#joy{display:none}}</style></head>
-<body><div id="lobby"><div class="card"><h1>⚽ BALL HAX</h1><p>Online 2D • Blue vs Red</p><input id="name" maxlength="16" placeholder="Nhập tên của bạn"><button id="join">VÀO SERVER</button><p id="status">Nhập tên rồi vào server.</p></div></div>
-<div id="game"><canvas id="c"></canvas><div id="top">🔵 <span id="bs">0</span> — <span id="rs">0</span> 🔴 • Vòng <span id="round">1</span></div><div id="hint">WASD / mũi tên • Mobile dùng joystick</div><div id="joy"><div id="knob"></div></div></div>
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ball Hax Online</title>
+
+<style>
+html,body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  background:#168b45;
+  font-family:Arial
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:100%
+}
+
+#ui{
+  position:fixed;
+  top:8px;
+  left:0;
+  right:0;
+  text-align:center;
+  color:white;
+  font-weight:bold;
+  text-shadow:0 2px 4px #000
+}
+
+#joy,#kick{
+  display:none;
+  position:fixed;
+  bottom:35px
+}
+
+#joy{
+  left:20px;
+  width:110px;
+  height:110px;
+  border:2px solid #fff8;
+  border-radius:50%
+}
+
+#kick{
+  right:20px;
+  width:85px;
+  height:85px;
+  border:2px solid white;
+  border-radius:50%;
+  background:#e44;
+  color:white;
+  font-weight:bold
+}
+
+@media(max-width:800px){
+  #joy,#kick{
+    display:block
+  }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  ⚽ BALL HAX ONLINE<br>
+  <span id="score">0 - 0</span>
+  •
+  <span id="time">05:00</span>
+</div>
+
+<div id="joy"></div>
+<button id="kick">ĐÁ</button>
+
 <script>
-const lobby=document.getElementById("lobby"),game=document.getElementById("game"),nameInput=document.getElementById("name"),join=document.getElementById("join"),status=document.getElementById("status"),c=document.getElementById("c"),ctx=c.getContext("2d"),bs=document.getElementById("bs"),rs=document.getElementById("rs"),roundEl=document.getElementById("round");let ws,me=null,state=null,W=1100,H=600,keys={up:false,down:false,left:false,right:false};
-join.onclick=()=>{const n=(nameInput.value.trim()||"Player").slice(0,16);const proto=location.protocol==="https:"?"wss":"ws";ws=new WebSocket(proto+"://"+location.host);status.textContent="Đang kết nối...";ws.onopen=()=>{ws.send(JSON.stringify({type:"name",name:n}));lobby.style.display="none";game.style.display="block";resize()};ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==="welcome")me=m.id;if(m.type==="state"){state=m;W=m.W;H=m.H;bs.textContent=m.score.blue;rs.textContent=m.score.red;roundEl.textContent=m.round}};ws.onerror=()=>status.textContent="Không kết nối được server.";ws.onclose=()=>{if(game.style.display==="block"){game.style.display="none";lobby.style.display="flex";status.textContent="Mất kết nối server."}}};
-function send(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"keys",...keys}))}addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k==="w"||k==="arrowup")keys.up=true;if(k==="s"||k==="arrowdown")keys.down=true;if(k==="a"||k==="arrowleft")keys.left=true;if(k==="d"||k==="arrowright")keys.right=true;send()});addEventListener("keyup",e=>{const k=e.key.toLowerCase();if(k==="w"||k==="arrowup")keys.up=false;if(k==="s"||k==="arrowdown")keys.down=false;if(k==="a"||k==="arrowleft")keys.left=false;if(k==="d"||k==="arrowright")keys.right=false;send()});function resize(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio}addEventListener("resize",resize);
-const joy=document.getElementById("joy"),knob=document.getElementById("knob");function jm(e){const r=joy.getBoundingClientRect(),t=e.touches[0];let dx=t.clientX-(r.left+r.width/2),dy=t.clientY-(r.top+r.height/2),d=Math.hypot(dx,dy),m=42;if(d>m){dx=dx/d*m;dy=dy/d*m}knob.style.transform=`translate(${dx}px,${dy}px)`;keys.left=dx<-12;keys.right=dx>12;keys.up=dy<-12;keys.down=dy>12;send()}joy.addEventListener("touchstart",e=>{e.preventDefault();jm(e)},{passive:false});joy.addEventListener("touchmove",e=>{e.preventDefault();jm(e)},{passive:false});joy.addEventListener("touchend",()=>{keys={up:false,down:false,left:false,right:false};knob.style.transform="";send()});
-function draw(){if(!state)return;const s=Math.min(innerWidth/W,innerHeight/H),ox=(innerWidth-W*s)/2,oy=(innerHeight-H*s)/2;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);ctx.save();ctx.translate(ox,oy);ctx.scale(s,s);ctx.fillStyle="#159447";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#ffffff18";ctx.lineWidth=2;for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.strokeStyle="#fff";ctx.lineWidth=5;ctx.strokeRect(0,0,W,H);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.fillStyle="#fff";ctx.fillRect(-28,H/2-105,28,210);ctx.fillRect(W,H/2-105,28,210);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(state.ball.x,state.ball.y,13,0,Math.PI*2);ctx.fill();for(const p of state.players){ctx.fillStyle=p.team==="blue"?"#1976ff":"#f13a3a";ctx.beginPath();ctx.arc(p.x,p.y,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle=p.id===me?"#ffe94a":"#fff";ctx.lineWidth=p.id===me?4:2;ctx.stroke();ctx.fillStyle="#fff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.fillText(p.name,p.x,p.y-25)}ctx.restore()}function loop(){draw();requestAnimationFrame(loop)}loop();
-</script></body></html>
+const c=document.getElementById('c'),
+x=c.getContext('2d'),
+score=document.getElementById('score'),
+time=document.getElementById('time');
+
+let ws,me,state;
+
+let keys={
+  up:0,
+  down:0,
+  left:0,
+  right:0,
+  kick:0
+};
+
+function size(){
+  c.width=innerWidth*devicePixelRatio;
+  c.height=innerHeight*devicePixelRatio
+}
+
+size();
+onresize=size;
+
+function send(){
+  if(ws&&ws.readyState===1)
+    ws.send(JSON.stringify({
+      type:'input',
+      ...keys
+    }))
+}
+
+ws=new WebSocket(
+  (location.protocol==='https:'?'wss':'ws')
+  +'://'+location.host
+);
+
+ws.onmessage=e=>{
+  let m=JSON.parse(e.data);
+
+  if(m.type==='welcome')
+    me=m.id;
+
+  if(m.type==='state'){
+    state=m;
+
+    score.textContent=
+      m.score.blue+' - '+m.score.red;
+
+    time.textContent=
+      m.mode==='golden'
+      ?'GOLDEN'
+      :fmt(m.timeLeft)
+  }
+};
+
+onkeydown=e=>{
+  let k=e.key.toLowerCase();
+
+  if(k==='w'||k==='arrowup')
+    keys.up=1;
+
+  if(k==='s'||k==='arrowdown')
+    keys.down=1;
+
+  if(k==='a'||k==='arrowleft')
+    keys.left=1;
+
+  if(k==='d'||k==='arrowright')
+    keys.right=1;
+
+  if(k===' ')
+    keys.kick=1;
+
+  send()
+};
+
+onkeyup=e=>{
+  let k=e.key.toLowerCase();
+
+  if(k==='w'||k==='arrowup')
+    keys.up=0;
+
+  if(k==='s'||k==='arrowdown')
+    keys.down=0;
+
+  if(k==='a'||k==='arrowleft')
+    keys.left=0;
+
+  if(k==='d'||k==='arrowright')
+    keys.right=0;
+
+  if(k===' ')
+    keys.kick=0;
+
+  send()
+};
+
+function fmt(s){
+  s=Math.max(0,Math.ceil(s));
+
+  return String(Math.floor(s/60)).padStart(2,'0')
+    +':'
+    +String(s%60).padStart(2,'0')
+}
+
+function draw(){
+
+  requestAnimationFrame(draw);
+
+  if(!state)return;
+
+  let W=state.W,
+      H=state.H,
+      s=Math.min(
+        innerWidth/W,
+        innerHeight/H
+      ),
+      ox=(innerWidth-W*s)/2,
+      oy=(innerHeight-H*s)/2;
+
+  x.setTransform(
+    devicePixelRatio,
+    0,
+    0,
+    devicePixelRatio,
+    0,
+    0
+  );
+
+  x.clearRect(
+    0,
+    0,
+    innerWidth,
+    innerHeight
+  );
+
+  x.save();
+
+  x.translate(ox,oy);
+  x.scale(s,s);
+
+  x.fillStyle='#168b45';
+  x.fillRect(0,0,W,H);
+
+  x.strokeStyle='white';
+  x.lineWidth=5;
+  x.strokeRect(0,0,W,H);
+
+  x.beginPath();
+  x.moveTo(W/2,0);
+  x.lineTo(W/2,H);
+  x.stroke();
+
+  x.beginPath();
+  x.arc(
+    W/2,
+    H/2,
+    75,
+    0,
+    7
+  );
+  x.stroke();
+
+  x.fillStyle='white';
+
+  x.beginPath();
+  x.arc(
+    state.ball.x,
+    state.ball.y,
+    13,
+    0,
+    7
+  );
+  x.fill();
+
+  for(const p of state.players){
+
+    x.fillStyle=
+      p.team==='blue'
+      ?'#1680ff'
+      :'#ef3333';
+
+    x.beginPath();
+
+    x.arc(
+      p.x,
+      p.y,
+      18,
+      0,
+      7
+    );
+
+    x.fill();
+
+    x.fillStyle='white';
+    x.font='12px Arial';
+    x.textAlign='center';
+
+    x.fillText(
+      p.name,
+      p.x,
+      p.y-24
+    );
+  }
+
+  x.restore()
+}
+
+draw();
+</script>
+
+</body>
+</html>
