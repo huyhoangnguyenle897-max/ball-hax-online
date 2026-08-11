@@ -1,73 +1,67 @@
-"use strict";
-
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const WebSocket = require("ws");
 
-/* =========================================================
-   SERVER
-========================================================= */
-
 const PORT = process.env.PORT || 8080;
 
-const FIELD_WIDTH = 1100;
-const FIELD_HEIGHT = 560;
+// =========================================================
+// GAME CONFIG
+// =========================================================
+
+const FIELD_WIDTH = 1400;
+const FIELD_HEIGHT = 700;
 
 const MAX_PLAYERS = 12;
 const MATCH_TIME = 300;
 
-/* =========================================================
-   HAXBALL-LIKE PHYSICS
-========================================================= */
-
 const PLAYER_RADIUS = 15;
 const BALL_RADIUS = 10;
 
-const GOAL_HEIGHT = 190;
+const GOAL_HEIGHT = 240;
 const GOAL_DEPTH = 70;
 
-/*
- * Các thông số này được cố tình giữ vừa phải.
- * Không dùng acceleration cực lớn và không dùng
- * damping quá thấp khiến cầu thủ trượt mãi.
- */
+// =========================================================
+// HAXBALL-LIKE PHYSICS
+// =========================================================
 
-const PHYSICS = {
+const PLAYER_PHYSICS = {
+bCoef: 0.5,
+damping: 0.96,
+acceleration: 0.10,
 
-    playerAcceleration: 0.095,
+kickingAcceleration: 0.07,
+kickingDamping: 0.96,
 
-    playerDamping: 0.88,
-
-    playerMaxSpeed: 5.5,
-
-    ballDamping: 0.985,
-
-    ballBounce: 0.72,
-
-    playerBounce: 0.45,
-
-    kickStrength: 5.2,
-
-    kickCooldown: 180
-
+kickStrength: 5.0
 };
 
-/* =========================================================
-   PLAYERS
-========================================================= */
+const BALL_PHYSICS = {
+bCoef: 0.5,
+damping: 0.99,
+maxSpeed: 15
+};
+
+// Server physics tick.
+// 60Hz giúp chuyển động ổn định hơn 30Hz.
+const TICK_RATE = 60;
+const TICK_MS = 1000 / TICK_RATE;
+
+// =========================================================
+// PLAYERS
+// =========================================================
 
 const players = new Map();
 
 let nextPlayerId = 1;
 
-/* =========================================================
-   SCORE / MATCH
-========================================================= */
+// =========================================================
+// SCORE / MATCH
+// =========================================================
 
 let score = {
-    blue: 0,
-    red: 0
+blue: 0,
+red: 0
 };
 
 let round = 1;
@@ -75,1583 +69,1347 @@ let round = 1;
 let mode = "normal";
 
 let matchEnd =
-    Date.now() + MATCH_TIME * 1000;
+Date.now() +
+MATCH_TIME * 1000;
 
 let resetAt = 0;
 
-/* =========================================================
-   BALL
-========================================================= */
+// =========================================================
+// BALL
+// =========================================================
 
 let ball = {
-
-    x: FIELD_WIDTH / 2,
-
-    y: FIELD_HEIGHT / 2,
-
-    vx: 0,
-
-    vy: 0
-
+x: FIELD_WIDTH / 2,
+y: FIELD_HEIGHT / 2,
+vx: 0,
+vy: 0
 };
 
-/* =========================================================
-   UTILITY
-========================================================= */
+// =========================================================
+// UTILS
+// =========================================================
 
 function clamp(value, min, max) {
-
-    return Math.max(
-        min,
-        Math.min(max, value)
-    );
-
+return Math.max(min, Math.min(max, value));
 }
 
+function safeNumber(value, fallback = 0) {
+const number = Number(value);
 
-function distance(ax, ay, bx, by) {
-
-    return Math.hypot(
-        bx - ax,
-        by - ay
-    );
-
+return Number.isFinite(number)
+? number
+: fallback;
 }
 
-
-function normalize(x, y) {
-
-    const length =
-        Math.hypot(x, y);
-
-    if (length < 0.00001) {
-
-        return {
-            x: 0,
-            y: 0
-        };
-
-    }
-
-    return {
-
-        x: x / length,
-
-        y: y / length
-
-    };
-
+function distance(a, b) {
+return Math.hypot(
+a.x - b.x,
+a.y - b.y
+);
 }
 
-
-/* =========================================================
-   SPAWN
-========================================================= */
+// =========================================================
+// SPAWN
+// =========================================================
 
 function randomSpawn(player) {
 
-    if (player.team === "blue") {
+if (player.team === "blue") {
 
-        player.x =
-            FIELD_WIDTH * 0.25;
+player.x =
+  180 +
+  Math.random() * 80;
 
-    } else {
+} else {
 
-        player.x =
-            FIELD_WIDTH * 0.75;
-
-    }
-
-    player.y =
-        FIELD_HEIGHT / 2 +
-        (Math.random() - 0.5) * 180;
-
-    player.vx = 0;
-    player.vy = 0;
+player.x =
+  FIELD_WIDTH -
+  180 -
+  Math.random() * 80;
 
 }
 
+player.y =
+FIELD_HEIGHT / 2 +
+(Math.random() - 0.5) * 260;
 
-/* =========================================================
-   RESET BALL
-========================================================= */
+player.vx = 0;
+player.vy = 0;
+}
+
+// =========================================================
+// RESET BALL
+// =========================================================
 
 function resetBall() {
 
-    ball.x =
-        FIELD_WIDTH / 2;
+ball = {
+x: FIELD_WIDTH / 2,
+y: FIELD_HEIGHT / 2,
+vx: 0,
+vy: 0
+};
 
-    ball.y =
-        FIELD_HEIGHT / 2;
-
-    ball.vx = 0;
-    ball.vy = 0;
-
-    for (
-        const player of players.values()
-    ) {
-
-        randomSpawn(player);
-
-    }
-
+for (const player of players.values()) {
+randomSpawn(player);
+}
 }
 
-
-/* =========================================================
-   BALANCE TEAMS
-========================================================= */
+// =========================================================
+// BALANCE TEAMS
+// =========================================================
 
 function balanceTeams() {
 
-    const list =
-        [...players.values()]
-            .sort(
-                () =>
-                    Math.random() - 0.5
-            );
+const list =
+[...players.values()]
+.sort(() => Math.random() - 0.5);
 
-    let blue = 0;
-    let red = 0;
+let blue = 0;
+let red = 0;
 
-    for (const player of list) {
+for (const player of list) {
 
-        if (blue <= red) {
+if (blue <= red) {
 
-            player.team = "blue";
+  player.team = "blue";
+  blue++;
 
-            blue++;
+} else {
 
-        } else {
-
-            player.team = "red";
-
-            red++;
-
-        }
-
-    }
-
-    for (
-        const player of players.values()
-    ) {
-
-        randomSpawn(player);
-
-    }
+  player.team = "red";
+  red++;
+}
 
 }
 
+for (const player of players.values()) {
+randomSpawn(player);
+}
+}
 
-/* =========================================================
-   GAME STATE
-========================================================= */
+// =========================================================
+// GAME STATE
+// =========================================================
 
 function getGameState() {
 
-    let timeLeft = 0;
+let timeLeft = 0;
 
-    if (mode === "normal") {
+if (mode === "normal") {
 
-        timeLeft =
-            Math.max(
-                0,
-                (matchEnd - Date.now()) / 1000
-            );
-
-    }
-
-    return {
-
-        type: "state",
-
-        W: FIELD_WIDTH,
-
-        H: FIELD_HEIGHT,
-
-        score: {
-
-            blue: score.blue,
-
-            red: score.red
-
-        },
-
-        round,
-
-        mode,
-
-        timeLeft,
-
-        ball: {
-
-            x: ball.x,
-
-            y: ball.y,
-
-            vx: ball.vx,
-
-            vy: ball.vy
-
-        },
-
-        players:
-            [...players.values()]
-                .map(player => ({
-
-                    id: player.id,
-
-                    name: player.name,
-
-                    team: player.team,
-
-                    x: player.x,
-
-                    y: player.y,
-
-                    vx: player.vx,
-
-                    vy: player.vy
-
-                }))
-
-    };
+timeLeft =
+  Math.max(
+    0,
+    (matchEnd - Date.now()) / 1000
+  );
 
 }
 
+return {
 
-/* =========================================================
-   BROADCAST
-========================================================= */
+type: "state",
+
+W: FIELD_WIDTH,
+H: FIELD_HEIGHT,
+
+goalHeight: GOAL_HEIGHT,
+goalDepth: GOAL_DEPTH,
+
+score: {
+  blue: score.blue,
+  red: score.red
+},
+
+round,
+
+mode,
+
+timeLeft,
+
+ball: {
+  x: ball.x,
+  y: ball.y,
+  vx: ball.vx,
+  vy: ball.vy
+},
+
+players:
+  [...players.values()]
+    .map(player => ({
+
+      id: player.id,
+
+      name: player.name,
+
+      team: player.team,
+
+      x: player.x,
+
+      y: player.y,
+
+      vx: player.vx,
+
+      vy: player.vy
+    }))
+
+};
+}
+
+// =========================================================
+// BROADCAST
+// =========================================================
 
 function broadcast() {
 
-    const message =
-        JSON.stringify(
-            getGameState()
-        );
+const message =
+JSON.stringify(
+getGameState()
+);
 
-    for (
-        const player of players.values()
-    ) {
+for (const player of players.values()) {
 
-        if (
-            player.ws.readyState ===
-            WebSocket.OPEN
-        ) {
+if (
+  player.ws.readyState ===
+  WebSocket.OPEN
+) {
 
-            try {
+  try {
 
-                player.ws.send(message);
+    player.ws.send(message);
 
-            } catch {
-
-                // bỏ qua client lỗi
-
-            }
-
-        }
-
-    }
-
+  } catch {
+    // Bỏ qua lỗi gửi
+  }
 }
 
+}
+}
 
-/* =========================================================
-   GOAL
-========================================================= */
+// =========================================================
+// GOAL
+// =========================================================
 
 function goal(team) {
 
-    score[team]++;
+score[team]++;
 
-    /*
-     * CƠ HỘI VÀNG
-     */
+// Golden goal
+if (mode === "golden") {
 
-    if (mode === "golden") {
+round++;
 
-        round++;
+mode = "normal";
 
-        mode = "normal";
+score = {
+  blue: 0,
+  red: 0
+};
 
-        score = {
+matchEnd =
+  Date.now() +
+  MATCH_TIME * 1000;
 
-            blue: 0,
+resetBall();
 
-            red: 0
-
-        };
-
-        matchEnd =
-            Date.now() +
-            MATCH_TIME * 1000;
-
-        resetBall();
-
-        return;
-
-    }
-
-
-    /*
-     * Đội đạt 3 bàn
-     */
-
-    if (
-        score[team] >= 3
-    ) {
-
-        resetAt =
-            Date.now() + 2200;
-
-        return;
-
-    }
-
-
-    /*
-     * Reset sau bàn thắng
-     */
-
-    resetAt =
-        Date.now() + 1200;
+return;
 
 }
 
-
-/* =========================================================
-   PLAYER PHYSICS
-========================================================= */
-
-function updatePlayer(
-    player,
-    dt
+// Đội đạt 3 bàn
+if (
+score[team] >= 3
 ) {
 
-    let ax = 0;
-    let ay = 0;
+resetAt =
+  Date.now() + 2200;
 
-    if (player.input.up)
-        ay -= 1;
-
-    if (player.input.down)
-        ay += 1;
-
-    if (player.input.left)
-        ax -= 1;
-
-    if (player.input.right)
-        ax += 1;
-
-
-    /*
-     * Chuẩn hóa đường chéo
-     */
-
-    if (
-        ax !== 0 ||
-        ay !== 0
-    ) {
-
-        const length =
-            Math.hypot(ax, ay);
-
-        ax /= length;
-        ay /= length;
-
-    }
-
-
-    /*
-     * Gia tốc
-     */
-
-    player.vx +=
-        ax *
-        PHYSICS.playerAcceleration *
-        dt *
-        60;
-
-    player.vy +=
-        ay *
-        PHYSICS.playerAcceleration *
-        dt *
-        60;
-
-
-    /*
-     * Ma sát khi không điều khiển.
-     *
-     * Không để cầu thủ trượt quá lâu.
-     */
-
-    const damping =
-        Math.pow(
-            PHYSICS.playerDamping,
-            dt * 60
-        );
-
-    player.vx *= damping;
-    player.vy *= damping;
-
-
-    /*
-     * Giới hạn tốc độ
-     */
-
-    const speed =
-        Math.hypot(
-            player.vx,
-            player.vy
-        );
-
-    if (
-        speed >
-        PHYSICS.playerMaxSpeed
-    ) {
-
-        player.vx =
-            player.vx /
-            speed *
-            PHYSICS.playerMaxSpeed;
-
-        player.vy =
-            player.vy /
-            speed *
-            PHYSICS.playerMaxSpeed;
-
-    }
-
-
-    /*
-     * Di chuyển
-     */
-
-    player.x +=
-        player.vx *
-        dt *
-        60;
-
-    player.y +=
-        player.vy *
-        dt *
-        60;
-
-
-    /*
-     * Giữ trong sân
-     */
-
-    player.x =
-        clamp(
-            player.x,
-
-            PLAYER_RADIUS,
-
-            FIELD_WIDTH -
-            PLAYER_RADIUS
-        );
-
-    player.y =
-        clamp(
-            player.y,
-
-            PLAYER_RADIUS,
-
-            FIELD_HEIGHT -
-            PLAYER_RADIUS
-        );
-
-
-    /*
-     * KICK COOLDOWN
-     */
-
-    if (
-        player.kickCooldown > 0
-    ) {
-
-        player.kickCooldown -=
-            dt * 1000;
-
-    }
-
-
-    /*
-     * ĐÁ BÓNG
-     */
-
-    if (
-        player.input.kick &&
-        player.kickCooldown <= 0
-    ) {
-
-        const dx =
-            ball.x -
-            player.x;
-
-        const dy =
-            ball.y -
-            player.y;
-
-        const dist =
-            Math.hypot(dx, dy);
-
-
-        if (
-            dist <=
-            PLAYER_RADIUS +
-            BALL_RADIUS +
-            12
-        ) {
-
-            const dir =
-                normalize(dx, dy);
-
-
-            /*
-             * Cú đá.
-             */
-
-            ball.vx +=
-                dir.x *
-                PHYSICS.kickStrength;
-
-            ball.vy +=
-                dir.y *
-                PHYSICS.kickStrength;
-
-
-            /*
-             * Kick cooldown
-             */
-
-            player.kickCooldown =
-                PHYSICS.kickCooldown;
-
-        }
-
-    }
+return;
 
 }
 
+// Reset sau bàn thắng
+resetAt =
+Date.now() + 1200;
+}
 
-/* =========================================================
-   PLAYER - BALL COLLISION
-========================================================= */
+// =========================================================
+// PLAYER COLLISION
+// =========================================================
 
-function collidePlayerBall(
-    player
+function resolvePlayerCollisions() {
+
+const list =
+[...players.values()];
+
+for (
+let i = 0;
+i < list.length;
+i++
 ) {
 
-    let dx =
-        ball.x -
-        player.x;
+for (
+  let j = i + 1;
+  j < list.length;
+  j++
+) {
 
-    let dy =
-        ball.y -
-        player.y;
+  const a = list[i];
+  const b = list[j];
 
-    let dist =
-        Math.hypot(dx, dy);
+  let dx =
+    b.x - a.x;
 
+  let dy =
+    b.y - a.y;
 
-    if (dist < 0.0001) {
+  let dist =
+    Math.hypot(dx, dy);
 
-        dx = 1;
-        dy = 0;
+  const minDistance =
+    PLAYER_RADIUS * 2;
 
-        dist = 1;
+  if (dist === 0) {
 
-    }
+    dx = 1;
+    dy = 0;
 
+    dist = 1;
+  }
 
-    const minDistance =
-        PLAYER_RADIUS +
-        BALL_RADIUS;
-
-
-    if (
-        dist >= minDistance
-    ) {
-
-        return;
-
-    }
-
+  if (
+    dist < minDistance
+  ) {
 
     const nx =
-        dx / dist;
+      dx / dist;
 
     const ny =
-        dy / dist;
-
-
-    /*
-     * Đẩy bóng ra khỏi cầu thủ
-     */
+      dy / dist;
 
     const overlap =
-        minDistance -
-        dist;
+      minDistance - dist;
 
-    ball.x +=
-        nx *
-        overlap;
+    // Đẩy hai player ra
+    a.x -=
+      nx * overlap * 0.5;
 
-    ball.y +=
-        ny *
-        overlap;
+    a.y -=
+      ny * overlap * 0.5;
 
+    b.x +=
+      nx * overlap * 0.5;
 
-    /*
-     * Vận tốc tương đối
-     */
+    b.y +=
+      ny * overlap * 0.5;
 
-    const relativeVx =
-        ball.vx -
-        player.vx;
-
-    const relativeVy =
-        ball.vy -
-        player.vy;
-
-
+    // Trao đổi vận tốc theo pháp tuyến
     const relativeVelocity =
-        relativeVx * nx +
-        relativeVy * ny;
-
-
-    /*
-     * Chỉ va chạm khi đang lao vào nhau.
-     */
+      (b.vx - a.vx) * nx +
+      (b.vy - a.vy) * ny;
 
     if (
-        relativeVelocity < 0
+      relativeVelocity < 0
     ) {
 
-        const impulse =
-            -(1 +
-                PHYSICS.ballBounce) *
-            relativeVelocity;
+      const impulse =
+        -relativeVelocity *
+        0.5;
 
-        ball.vx +=
-            nx *
-            impulse;
+      a.vx -=
+        nx * impulse;
 
-        ball.vy +=
-            ny *
-            impulse;
+      a.vy -=
+        ny * impulse;
 
+      b.vx +=
+        nx * impulse;
+
+      b.vy +=
+        ny * impulse;
     }
 
+    keepPlayerInside(a);
+    keepPlayerInside(b);
+  }
+}
 
-    /*
-     * Một chút ảnh hưởng từ chuyển động
-     * của cầu thủ.
-     */
+}
+}
 
-    ball.vx +=
-        player.vx *
-        0.12;
+// =========================================================
+// KEEP PLAYER INSIDE
+// =========================================================
 
-    ball.vy +=
-        player.vy *
-        0.12;
+function keepPlayerInside(player) {
+
+player.x =
+clamp(
+player.x,
+PLAYER_RADIUS,
+FIELD_WIDTH -
+PLAYER_RADIUS
+);
+
+player.y =
+clamp(
+player.y,
+PLAYER_RADIUS,
+FIELD_HEIGHT -
+PLAYER_RADIUS
+);
+}
+
+// =========================================================
+// PLAYER / BALL COLLISION
+// =========================================================
+
+function collidePlayerWithBall(player) {
+
+let dx =
+ball.x - player.x;
+
+let dy =
+ball.y - player.y;
+
+let dist =
+Math.hypot(dx, dy);
+
+const minDistance =
+PLAYER_RADIUS +
+BALL_RADIUS;
+
+if (dist === 0) {
+
+dx = 1;
+dy = 0;
+
+dist = 1;
 
 }
 
+if (
+dist < minDistance
+) {
 
-/* =========================================================
-   BALL WALLS + GOALS
-========================================================= */
+const nx =
+  dx / dist;
 
-function updateBall(dt) {
+const ny =
+  dy / dist;
 
-    /*
-     * Di chuyển bóng
-     */
+const overlap =
+  minDistance - dist;
 
-    ball.x +=
-        ball.vx *
-        dt *
-        60;
+// Đẩy bóng ra khỏi player
+ball.x +=
+  nx * overlap;
 
-    ball.y +=
-        ball.vy *
-        dt *
-        60;
+ball.y +=
+  ny * overlap;
 
+// Vận tốc tương đối
+const relativeVx =
+  ball.vx - player.vx;
 
-    /*
-     * Ma sát bóng
-     */
+const relativeVy =
+  ball.vy - player.vy;
 
-    const ballDamping =
-        Math.pow(
-            PHYSICS.ballDamping,
-            dt * 60
+const relativeVelocity =
+  relativeVx * nx +
+  relativeVy * ny;
+
+// Chỉ bật khi đang lao vào nhau
+if (
+  relativeVelocity < 0
+) {
+
+  const impulse =
+    -(1 + BALL_PHYSICS.bCoef) *
+    relativeVelocity;
+
+  ball.vx +=
+    nx * impulse;
+
+  ball.vy +=
+    ny * impulse;
+}
+
+// Một phần vận tốc của player truyền sang bóng
+ball.vx +=
+  player.vx * 0.18;
+
+ball.vy +=
+  player.vy * 0.18;
+
+}
+}
+
+// =========================================================
+// BALL WALL COLLISION
+// =========================================================
+
+function collideBallWithWalls() {
+
+const goalTop =
+FIELD_HEIGHT / 2 -
+GOAL_HEIGHT / 2;
+
+const goalBottom =
+FIELD_HEIGHT / 2 +
+GOAL_HEIGHT / 2;
+
+// TOP
+if (
+ball.y <
+BALL_RADIUS
+) {
+
+ball.y =
+  BALL_RADIUS;
+
+ball.vy =
+  Math.abs(ball.vy) *
+  BALL_PHYSICS.bCoef;
+
+}
+
+// BOTTOM
+if (
+ball.y >
+FIELD_HEIGHT -
+BALL_RADIUS
+) {
+
+ball.y =
+  FIELD_HEIGHT -
+  BALL_RADIUS;
+
+ball.vy =
+  -Math.abs(ball.vy) *
+  BALL_PHYSICS.bCoef;
+
+}
+
+// LEFT WALL
+if (
+ball.x <
+BALL_RADIUS &&
+(
+ball.y < goalTop ||
+ball.y > goalBottom
+)
+) {
+
+ball.x =
+  BALL_RADIUS;
+
+ball.vx =
+  Math.abs(ball.vx) *
+  BALL_PHYSICS.bCoef;
+
+}
+
+// RIGHT WALL
+if (
+ball.x >
+FIELD_WIDTH -
+BALL_RADIUS &&
+(
+ball.y < goalTop ||
+ball.y > goalBottom
+)
+) {
+
+ball.x =
+  FIELD_WIDTH -
+  BALL_RADIUS;
+
+ball.vx =
+  -Math.abs(ball.vx) *
+  BALL_PHYSICS.bCoef;
+
+}
+}
+
+// =========================================================
+// CHECK GOAL
+// =========================================================
+
+function checkGoal() {
+
+const goalTop =
+FIELD_HEIGHT / 2 -
+GOAL_HEIGHT / 2;
+
+const goalBottom =
+FIELD_HEIGHT / 2 +
+GOAL_HEIGHT / 2;
+
+const insideGoal =
+ball.y >= goalTop &&
+ball.y <= goalBottom;
+
+// Bóng ra khỏi bên trái
+if (
+ball.x <
+-BALL_RADIUS &&
+insideGoal
+) {
+
+goal("red");
+
+return true;
+
+}
+
+// Bóng ra khỏi bên phải
+if (
+ball.x >
+FIELD_WIDTH +
+BALL_RADIUS &&
+insideGoal
+) {
+
+goal("blue");
+
+return true;
+
+}
+
+return false;
+}
+
+// =========================================================
+// BALL SPEED LIMIT
+// =========================================================
+
+function limitBallSpeed() {
+
+const speed =
+Math.hypot(
+ball.vx,
+ball.vy
+);
+
+if (
+speed >
+BALL_PHYSICS.maxSpeed
+) {
+
+ball.vx =
+  ball.vx /
+  speed *
+  BALL_PHYSICS.maxSpeed;
+
+ball.vy =
+  ball.vy /
+  speed *
+  BALL_PHYSICS.maxSpeed;
+
+}
+}
+
+// =========================================================
+// GAME PHYSICS
+// =========================================================
+
+function updatePhysics() {
+
+// -------------------------------------------------------
+// RESET SAU BÀN
+// -------------------------------------------------------
+
+if (resetAt) {
+
+if (
+  Date.now() >=
+  resetAt
+) {
+
+  // Có đội thắng 3 bàn
+  if (
+    score.blue >= 3 ||
+    score.red >= 3
+  ) {
+
+    const winningTeam =
+      score.blue >= 3
+        ? "blue"
+        : "red";
+
+    // Đội thua được chia lại
+    const losingPlayers =
+      [...players.values()]
+        .filter(
+          player =>
+            player.team !==
+            winningTeam
+        )
+        .sort(
+          () =>
+            Math.random() -
+            0.5
         );
 
-    ball.vx *=
-        ballDamping;
-
-    ball.vy *=
-        ballDamping;
-
-
-    /*
-     * Trần / đáy
-     */
-
-    if (
-        ball.y -
-        BALL_RADIUS <
-        0
-    ) {
-
-        ball.y =
-            BALL_RADIUS;
-
-        ball.vy =
-            Math.abs(
-                ball.vy
-            ) *
-            PHYSICS.ballBounce;
-
-    }
-
-
-    if (
-        ball.y +
-        BALL_RADIUS >
-        FIELD_HEIGHT
-    ) {
-
-        ball.y =
-            FIELD_HEIGHT -
-            BALL_RADIUS;
-
-        ball.vy =
-            -Math.abs(
-                ball.vy
-            ) *
-            PHYSICS.ballBounce;
-
-    }
-
-
-    /*
-     * Va chạm với cầu thủ
-     */
+    let index = 0;
 
     for (
-        const player of players.values()
+      const player
+      of losingPlayers
     ) {
 
-        collidePlayerBall(player);
+      player.team =
+        index % 2 === 0
+          ? "blue"
+          : "red";
 
+      index++;
     }
 
+    round++;
 
-    /*
-     * Kiểm tra vùng khung thành
-     */
+    score = {
+      blue: 0,
+      red: 0
+    };
 
-    const goalTop =
-        FIELD_HEIGHT / 2 -
-        GOAL_HEIGHT / 2;
+    mode = "normal";
 
-    const goalBottom =
-        FIELD_HEIGHT / 2 +
-        GOAL_HEIGHT / 2;
+    matchEnd =
+      Date.now() +
+      MATCH_TIME * 1000;
+  }
 
+  resetAt = 0;
 
-    const insideGoal =
-        ball.y >= goalTop &&
-        ball.y <= goalBottom;
+  resetBall();
+}
 
-
-    /*
-     * Bóng vào khung thành trái.
-     * Đội RED ghi bàn.
-     */
-
-    if (
-        ball.x <
-        -BALL_RADIUS &&
-        insideGoal
-    ) {
-
-        goal("red");
-
-        return;
-
-    }
-
-
-    /*
-     * Bóng vào khung thành phải.
-     * Đội BLUE ghi bàn.
-     */
-
-    if (
-        ball.x >
-        FIELD_WIDTH +
-        BALL_RADIUS &&
-        insideGoal
-    ) {
-
-        goal("blue");
-
-        return;
-
-    }
-
-
-    /*
-     * Tường trái.
-     *
-     * Chừa khoảng trống khung thành.
-     */
-
-    if (
-        ball.x -
-        BALL_RADIUS <
-        0 &&
-        !insideGoal
-    ) {
-
-        ball.x =
-            BALL_RADIUS;
-
-        ball.vx =
-            Math.abs(
-                ball.vx
-            ) *
-            PHYSICS.ballBounce;
-
-    }
-
-
-    /*
-     * Tường phải.
-     */
-
-    if (
-        ball.x +
-        BALL_RADIUS >
-        FIELD_WIDTH &&
-        !insideGoal
-    ) {
-
-        ball.x =
-            FIELD_WIDTH -
-            BALL_RADIUS;
-
-        ball.vx =
-            -Math.abs(
-                ball.vx
-            ) *
-            PHYSICS.ballBounce;
-
-    }
+return;
 
 }
 
+// -------------------------------------------------------
+// HẾT THỜI GIAN
+// -------------------------------------------------------
 
-/* =========================================================
-   GAME PHYSICS
-========================================================= */
+if (
+mode === "normal" &&
+Date.now() >= matchEnd
+) {
 
-function updatePhysics(dt) {
+// Hòa -> Golden Goal
+mode = "golden";
 
-    /*
-     * Đang chờ reset sau bàn
-     */
+score = {
+  blue: 0,
+  red: 0
+};
 
-    if (resetAt) {
+resetBall();
 
-        if (
-            Date.now() >=
-            resetAt
-        ) {
-
-            /*
-             * Đã có đội thắng trận
-             */
-
-            if (
-                score.blue >= 3 ||
-                score.red >= 3
-            ) {
-
-                const winningTeam =
-                    score.blue >= 3
-                        ? "blue"
-                        : "red";
-
-
-                /*
-                 * Đội thua đổi đội.
-                 */
-
-                const losingPlayers =
-                    [...players.values()]
-                        .filter(
-                            p =>
-                                p.team !==
-                                winningTeam
-                        )
-                        .sort(
-                            () =>
-                                Math.random() -
-                                0.5
-                        );
-
-
-                let index = 0;
-
-                for (
-                    const player of
-                    losingPlayers
-                ) {
-
-                    player.team =
-                        index % 2 === 0
-                            ? "blue"
-                            : "red";
-
-                    index++;
-
-                }
-
-
-                round++;
-
-                score = {
-
-                    blue: 0,
-
-                    red: 0
-
-                };
-
-                mode = "normal";
-
-                matchEnd =
-                    Date.now() +
-                    MATCH_TIME * 1000;
-
-            }
-
-
-            resetAt = 0;
-
-            resetBall();
-
-        }
-
-        return;
-
-    }
-
-
-    /*
-     * Hết thời gian.
-     *
-     * Nếu hòa -> golden goal.
-     */
-
-    if (
-        mode === "normal" &&
-        Date.now() >= matchEnd
-    ) {
-
-        mode = "golden";
-
-        score = {
-
-            blue: 0,
-
-            red: 0
-
-        };
-
-        resetBall();
-
-        return;
-
-    }
-
-
-    /*
-     * Cập nhật tất cả cầu thủ.
-     */
-
-    for (
-        const player of players.values()
-    ) {
-
-        updatePlayer(
-            player,
-            dt
-        );
-
-    }
-
-
-    /*
-     * Cập nhật bóng.
-     */
-
-    updateBall(dt);
+return;
 
 }
 
+// -------------------------------------------------------
+// PLAYERS
+// -------------------------------------------------------
 
-/* =========================================================
-   HTTP SERVER
-========================================================= */
+for (
+const player
+of players.values()
+) {
 
-const publicFolder =
-    path.join(
-        __dirname,
-        "public"
+let ax = 0;
+let ay = 0;
+
+if (player.input.up)
+  ay -= 1;
+
+if (player.input.down)
+  ay += 1;
+
+if (player.input.left)
+  ax -= 1;
+
+if (player.input.right)
+  ax += 1;
+
+const moving =
+  ax !== 0 ||
+  ay !== 0;
+
+// Chuẩn hóa hướng
+if (moving) {
+
+  const length =
+    Math.hypot(
+      ax,
+      ay
     );
 
+  ax /= length;
+  ay /= length;
+}
+
+// -----------------------------------------------------
+// HAXBALL-STYLE PHYSICS
+// -----------------------------------------------------
+
+const acceleration =
+  player.input.kick
+    ? PLAYER_PHYSICS.kickingAcceleration
+    : PLAYER_PHYSICS.acceleration;
+
+const damping =
+  player.input.kick
+    ? PLAYER_PHYSICS.kickingDamping
+    : PLAYER_PHYSICS.damping;
+
+if (moving) {
+
+  player.vx +=
+    ax * acceleration;
+
+  player.vy +=
+    ay * acceleration;
+}
+
+// Damping mỗi tick
+player.vx *= damping;
+player.vy *= damping;
+
+// -----------------------------------------------------
+// PLAYER / KICK MOVEMENT
+// -----------------------------------------------------
+
+player.x += player.vx;
+player.y += player.vy;
+
+keepPlayerInside(player);
+
+// -----------------------------------------------------
+// KICK
+// -----------------------------------------------------
+
+if (player.input.kick) {
+
+  const dx =
+    ball.x -
+    player.x;
+
+  const dy =
+    ball.y -
+    player.y;
+
+  const dist =
+    Math.hypot(
+      dx,
+      dy
+    );
+
+  const kickDistance =
+    PLAYER_RADIUS +
+    BALL_RADIUS +
+    2;
+
+  if (
+    dist <=
+    kickDistance
+  ) {
+
+    const length =
+      dist || 1;
+
+    ball.vx +=
+      (dx / length) *
+      PLAYER_PHYSICS.kickStrength;
+
+    ball.vy +=
+      (dy / length) *
+      PLAYER_PHYSICS.kickStrength;
+  }
+
+  // Một lần nhấn = một cú đá
+  player.input.kick = false;
+}
+
+}
+
+// -------------------------------------------------------
+// PLAYER / PLAYER
+// -------------------------------------------------------
+
+resolvePlayerCollisions();
+
+// -------------------------------------------------------
+// BALL
+// -------------------------------------------------------
+
+ball.x += ball.vx;
+ball.y += ball.vy;
+
+// Ball damping giống HaxBall
+ball.vx *= BALL_PHYSICS.damping;
+ball.vy *= BALL_PHYSICS.damping;
+
+limitBallSpeed();
+
+// -------------------------------------------------------
+// BALL / PLAYER
+// -------------------------------------------------------
+
+for (
+const player
+of players.values()
+) {
+
+collidePlayerWithBall(player);
+
+}
+
+// -------------------------------------------------------
+// WALL
+// -------------------------------------------------------
+
+collideBallWithWalls();
+
+// -------------------------------------------------------
+// GOAL
+// -------------------------------------------------------
+
+if (
+checkGoal()
+) {
+return;
+}
+
+limitBallSpeed();
+}
+
+// =========================================================
+// HTTP SERVER
+// =========================================================
+
+const publicFolder =
+path.join(
+__dirname,
+"public"
+);
 
 const server =
-    http.createServer(
-        (request, response) => {
+http.createServer(
+(request, response) => {
 
-            let requestPath;
+  let requestPath =
+    decodeURIComponent(
+      request.url.split("?")[0]
+    );
+
+  if (
+    requestPath === "/"
+  ) {
+
+    requestPath =
+      "/index.html";
+  }
+
+  const filePath =
+    path.join(
+      publicFolder,
+      requestPath
+    );
+
+  // Bảo vệ khỏi path traversal
+  if (
+    !filePath.startsWith(
+      publicFolder
+    )
+  ) {
+
+    response.writeHead(403);
+
+    response.end(
+      "Forbidden"
+    );
+
+    return;
+  }
+
+  fs.readFile(
+    filePath,
+    (error, data) => {
+
+      if (error) {
+
+        response.writeHead(
+          404,
+          {
+            "Content-Type":
+              "text/plain; charset=utf-8"
+          }
+        );
+
+        response.end(
+          "Not found"
+        );
+
+        return;
+      }
+
+      const extension =
+        path.extname(
+          filePath
+        );
+
+      let contentType =
+        "text/plain";
+
+      if (
+        extension === ".html"
+      ) {
+
+        contentType =
+          "text/html";
+      }
+
+      if (
+        extension === ".js"
+      ) {
+
+        contentType =
+          "text/javascript";
+      }
+
+      if (
+        extension === ".css"
+      ) {
+
+        contentType =
+          "text/css";
+      }
+
+      response.writeHead(
+        200,
+        {
+          "Content-Type":
+            contentType +
+            "; charset=utf-8"
+        }
+      );
+
+      response.end(data);
+    }
+  );
+}
+
+);
+
+// =========================================================
+// WEBSOCKET SERVER
+// =========================================================
+
+const wss =
+new WebSocket.Server({
+server
+});
+
+wss.on(
+"connection",
+ws => {
+
+// -----------------------------------------------------
+// MAX PLAYERS
+// -----------------------------------------------------
+
+if (
+  players.size >=
+  MAX_PLAYERS
+) {
+
+  ws.send(
+    JSON.stringify({
+      type: "error",
+      message:
+        "Server đầy! Tối đa 12 người."
+    })
+  );
+
+  ws.close();
+
+  return;
+}
+
+// -----------------------------------------------------
+// CREATE PLAYER
+// -----------------------------------------------------
+
+const id =
+  String(
+    nextPlayerId++
+  );
+
+const player = {
+
+  id,
+
+  name:
+    "Player",
+
+  team:
+    "blue",
+
+  x:
+    FIELD_WIDTH / 2,
+
+  y:
+    FIELD_HEIGHT / 2,
+
+  vx: 0,
+
+  vy: 0,
+
+  input: {
+
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    kick: false
+  },
+
+  ws
+};
+
+players.set(
+  id,
+  player
+);
+
+// Chia đội
+balanceTeams();
+
+// -----------------------------------------------------
+// WELCOME
+// -----------------------------------------------------
+
+ws.send(
+  JSON.stringify({
+
+    type:
+      "welcome",
+
+    id,
+
+    playerRadius:
+      PLAYER_RADIUS,
+
+    ballRadius:
+      BALL_RADIUS
+  })
+);
+
+broadcast();
+
+// -----------------------------------------------------
+// RECEIVE MESSAGE
+// -----------------------------------------------------
+
+ws.on(
+  "message",
+  raw => {
+
+    try {
+
+      const message =
+        JSON.parse(
+          raw.toString()
+        );
+
+      // -------------------------------------------------
+      // NAME
+      // -------------------------------------------------
+
+      if (
+        message.type ===
+        "name"
+      ) {
+
+        player.name =
+          String(
+            message.name ||
+            "Player"
+          )
+          .slice(0, 16)
+          .replace(
+            /[<>]/g,
+            ""
+          );
+
+        broadcast();
+      }
+
+      // -------------------------------------------------
+      // INPUT
+      // -------------------------------------------------
+
+      if (
+        message.type ===
+        "input"
+      ) {
+
+        player.input = {
+
+          up:
+            !!message.up,
+
+          down:
+            !!message.down,
+
+          left:
+            !!message.left,
+
+          right:
+            !!message.right,
+
+          kick:
+            !!message.kick
+        };
+      }
+
+      // -------------------------------------------------
+      // CHAT
+      // -------------------------------------------------
+
+      if (
+        message.type ===
+        "chat"
+      ) {
+
+        const text =
+          String(
+            message.text ||
+            ""
+          )
+          .trim()
+          .slice(0, 80)
+          .replace(
+            /[<>]/g,
+            ""
+          );
+
+        if (!text)
+          return;
+
+        const chatMessage =
+          JSON.stringify({
+
+            type:
+              "chat",
+
+            name:
+              player.name,
+
+            text
+          });
+
+        for (
+          const p
+          of players.values()
+        ) {
+
+          if (
+            p.ws.readyState ===
+            WebSocket.OPEN
+          ) {
 
             try {
 
-                requestPath =
-                    decodeURIComponent(
-                        request.url
-                            .split("?")[0]
-                    );
+              p.ws.send(
+                chatMessage
+              );
 
             } catch {
-
-                response.writeHead(400);
-
-                response.end(
-                    "Bad request"
-                );
-
-                return;
-
+              // Bỏ qua
             }
-
-
-            if (
-                requestPath === "/"
-            ) {
-
-                requestPath =
-                    "/index.html";
-
-            }
-
-
-            /*
-             * Chặn đường dẫn nguy hiểm
-             */
-
-            const filePath =
-                path.resolve(
-                    publicFolder,
-                    "." +
-                    requestPath
-                );
-
-
-            const publicRoot =
-                path.resolve(
-                    publicFolder
-                );
-
-
-            if (
-                filePath !== publicRoot &&
-                !filePath.startsWith(
-                    publicRoot +
-                    path.sep
-                )
-            ) {
-
-                response.writeHead(403);
-
-                response.end(
-                    "Forbidden"
-                );
-
-                return;
-
-            }
-
-
-            fs.readFile(
-                filePath,
-                (error, data) => {
-
-                    if (error) {
-
-                        response.writeHead(
-                            404,
-                            {
-                                "Content-Type":
-                                    "text/plain; charset=utf-8"
-                            }
-                        );
-
-                        response.end(
-                            "Not found"
-                        );
-
-                        return;
-
-                    }
-
-
-                    const extension =
-                        path.extname(
-                            filePath
-                        ).toLowerCase();
-
-
-                    const contentTypes = {
-
-                        ".html":
-                            "text/html",
-
-                        ".js":
-                            "text/javascript",
-
-                        ".css":
-                            "text/css",
-
-                        ".json":
-                            "application/json",
-
-                        ".png":
-                            "image/png",
-
-                        ".jpg":
-                            "image/jpeg",
-
-                        ".jpeg":
-                            "image/jpeg",
-
-                        ".svg":
-                            "image/svg+xml"
-
-                    };
-
-
-                    const contentType =
-                        contentTypes[
-                            extension
-                        ] ||
-                        "application/octet-stream";
-
-
-                    response.writeHead(
-                        200,
-                        {
-                            "Content-Type":
-                                contentType +
-                                "; charset=utf-8"
-                        }
-                    );
-
-                    response.end(data);
-
-                }
-            );
-
+          }
         }
+      }
+
+    } catch {
+      // Dữ liệu không hợp lệ
+    }
+  }
+);
+
+// -----------------------------------------------------
+// CLOSE
+// -----------------------------------------------------
+
+ws.on(
+  "close",
+  () => {
+
+    players.delete(
+      id
     );
 
+    balanceTeams();
 
-/* =========================================================
-   WEBSOCKET
-========================================================= */
-
-const wss =
-    new WebSocket.Server({
-        server
-    });
-
-
-wss.on(
-    "connection",
-    ws => {
-
-        /*
-         * Giới hạn 12 người
-         */
-
-        if (
-            players.size >=
-            MAX_PLAYERS
-        ) {
-
-            ws.send(
-                JSON.stringify({
-
-                    type: "error",
-
-                    message:
-                        "Server đầy! Tối đa 12 người."
-
-                })
-            );
-
-            ws.close();
-
-            return;
-
-        }
-
-
-        const id =
-            String(nextPlayerId++);
-
-
-        const player = {
-
-            id,
-
-            name: "",
-
-            team: "blue",
-
-            x: 0,
-
-            y: 0,
-
-            vx: 0,
-
-            vy: 0,
-
-            input: {
-
-                up: false,
-
-                down: false,
-
-                left: false,
-
-                right: false,
-
-                kick: false
-
-            },
-
-            kickCooldown: 0,
-
-            ws
-
-        };
-
-
-        players.set(
-            id,
-            player
-        );
-
-
-        /*
-         * Chia đội
-         */
-
-        balanceTeams();
-
-
-        /*
-         * Gửi ID cho client
-         */
-
-        ws.send(
-            JSON.stringify({
-
-                type: "welcome",
-
-                id,
-
-                maxPlayers:
-                    MAX_PLAYERS
-
-            })
-        );
-
-
-        /*
-         * Gửi trạng thái ngay lập tức
-         */
-
-        broadcast();
-
-
-        /* =================================================
-           MESSAGE
-        ================================================= */
-
-        ws.on(
-            "message",
-            raw => {
-
-                try {
-
-                    const message =
-                        JSON.parse(
-                            raw.toString()
-                        );
-
-
-                    /*
-                     * ĐẶT TÊN
-                     */
-
-                    if (
-                        message.type ===
-                        "name"
-                    ) {
-
-                        player.name =
-                            String(
-                                message.name ||
-                                ""
-                            )
-                            .trim()
-                            .slice(0, 16)
-                            .replace(
-                                /[<>]/g,
-                                ""
-                            );
-
-                        broadcast();
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * INPUT
-                     */
-
-                    if (
-                        message.type ===
-                        "input"
-                    ) {
-
-                        player.input = {
-
-                            up:
-                                !!message.up,
-
-                            down:
-                                !!message.down,
-
-                            left:
-                                !!message.left,
-
-                            right:
-                                !!message.right,
-
-                            kick:
-                                !!message.kick
-
-                        };
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * CHAT
-                     */
-
-                    if (
-                        message.type ===
-                        "chat"
-                    ) {
-
-                        const text =
-                            String(
-                                message.text ||
-                                ""
-                            )
-                            .trim()
-                            .slice(0, 80)
-                            .replace(
-                                /[<>]/g,
-                                ""
-                            );
-
-
-                        if (!text)
-                            return;
-
-
-                        const chatMessage =
-                            JSON.stringify({
-
-                                type:
-                                    "chat",
-
-                                name:
-                                    player.name ||
-                                    "Player",
-
-                                text
-
-                            });
-
-
-                        for (
-                            const p of
-                            players.values()
-                        ) {
-
-                            if (
-                                p.ws.readyState ===
-                                WebSocket.OPEN
-                            ) {
-
-                                p.ws.send(
-                                    chatMessage
-                                );
-
-                            }
-
-                        }
-
-                    }
-
-                } catch {
-
-                    /*
-                     * Bỏ qua packet lỗi
-                     */
-
-                }
-
-            }
-        );
-
-
-        /* =================================================
-           DISCONNECT
-        ================================================= */
-
-        ws.on(
-            "close",
-            () => {
-
-                players.delete(id);
-
-                balanceTeams();
-
-                broadcast();
-
-            }
-        );
-
-
-        ws.on(
-            "error",
-            () => {
-
-                /*
-                 * close sẽ xử lý việc
-                 * xóa player.
-                 */
-
-            }
-        );
-
-    }
+    broadcast();
+  }
 );
 
+// -----------------------------------------------------
+// ERROR
+// -----------------------------------------------------
 
-/* =========================================================
-   GAME LOOP
-========================================================= */
+ws.on(
+  "error",
+  () => {
 
-/*
- * 60 tick/giây.
- *
- * Logic game không phụ thuộc vào tốc độ
- * render của trình duyệt.
- */
+    players.delete(
+      id
+    );
 
-const TICK_RATE = 60;
+    balanceTeams();
 
-const TICK_TIME =
-    1000 / TICK_RATE;
+    broadcast();
+  }
+);
 
+}
+);
 
-let lastTime =
-    Date.now();
-
+// =========================================================
+// GAME LOOP
+// =========================================================
 
 setInterval(
-    () => {
+() => {
 
-        const now =
-            Date.now();
+updatePhysics();
 
+broadcast();
 
-        let dt =
-            (now - lastTime) /
-            1000;
-
-
-        lastTime = now;
-
-
-        /*
-         * Không cho một frame lag làm
-         * vật lý nhảy quá xa.
-         */
-
-        dt =
-            Math.min(
-                dt,
-                0.05
-            );
-
-
-        updatePhysics(dt);
-
-        broadcast();
-
-    },
-    TICK_TIME
+},
+TICK_MS
 );
 
-
-/* =========================================================
-   START
-========================================================= */
+// =========================================================
+// START
+// =========================================================
 
 server.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
+PORT,
+"0.0.0.0",
+() => {
 
-        console.log(
-            `Ball Hax server đang chạy tại port ${PORT}`
-        );
+console.log(
+  `Ball Hax server đang chạy tại port ${PORT}`
+);
 
-    }
+}
 );
