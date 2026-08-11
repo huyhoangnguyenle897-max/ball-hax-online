@@ -1,293 +1,1642 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
 <title>Ball Hax Online</title>
 
 <style>
-html,body{
-  margin:0;
-  height:100%;
-  overflow:hidden;
-  background:#168b45;
-  font-family:Arial
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-canvas{
-  display:block;
-  width:100%;
-  height:100%
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #111;
+    font-family: Arial, sans-serif;
+    touch-action: none;
 }
 
-#ui{
-  position:fixed;
-  top:8px;
-  left:0;
-  right:0;
-  text-align:center;
-  color:white;
-  font-weight:bold;
-  text-shadow:0 2px 4px #000
+#game {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #168a45;
 }
 
-#joy,#kick{
-  display:none;
-  position:fixed;
-  bottom:35px
+#scoreboard {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    text-shadow:
+        0 2px 3px rgba(0,0,0,.8),
+        0 0 5px rgba(0,0,0,.5);
+    pointer-events: none;
+    user-select: none;
 }
 
-#joy{
-  left:20px;
-  width:110px;
-  height:110px;
-  border:2px solid #fff8;
-  border-radius:50%
+#title {
+    font-size: 20px;
 }
 
-#kick{
-  right:20px;
-  width:85px;
-  height:85px;
-  border:2px solid white;
-  border-radius:50%;
-  background:#e44;
-  color:white;
-  font-weight:bold
+#score {
+    font-size: 19px;
 }
 
-@media(max-width:800px){
-  #joy,#kick{
-    display:block
-  }
+#time {
+    font-size: 17px;
+}
+
+#status {
+    position: fixed;
+    left: 50%;
+    top: 48%;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: 0 3px 6px black;
+    display: none;
+    pointer-events: none;
+}
+
+/* JOYSTICK */
+
+#joystick {
+    position: fixed;
+    left: 25px;
+    bottom: 35px;
+    width: 135px;
+    height: 135px;
+    border: 3px solid rgba(255,255,255,.65);
+    border-radius: 50%;
+    z-index: 10;
+    background: rgba(255,255,255,.04);
+}
+
+#stick {
+    position: absolute;
+    width: 58px;
+    height: 58px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(255,255,255,.35);
+    border: 2px solid rgba(255,255,255,.8);
+}
+
+/* KICK BUTTON */
+
+#kick {
+    position: fixed;
+    right: 25px;
+    bottom: 35px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background: #ef4148;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
+
+#kick:active {
+    transform: scale(.93);
+    background: #d62e35;
+}
+
+#help {
+    position: fixed;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,.65);
+    font-size: 11px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+@media (min-width: 900px) {
+    #joystick {
+        left: 40px;
+        bottom: 40px;
+    }
+
+    #kick {
+        right: 40px;
+        bottom: 40px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="c"></canvas>
+<canvas id="game"></canvas>
 
-<div id="ui">
-  ⚽ BALL HAX ONLINE<br>
-  <span id="score">0 - 0</span>
-  •
-  <span id="time">05:00</span>
+<div id="scoreboard">
+    <div id="title">⚽ BALL HAX ONLINE</div>
+    <div id="score">0 - 0</div>
+    <div id="time">05:00</div>
 </div>
 
-<div id="joy"></div>
+<div id="status"></div>
+
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
 <button id="kick">ĐÁ</button>
 
+<div id="help">
+    Kéo vòng tròn để di chuyển • Nhấn ĐÁ để sút
+</div>
+
 <script>
-const c=document.getElementById('c'),
-x=c.getContext('2d'),
-score=document.getElementById('score'),
-time=document.getElementById('time');
+"use strict";
 
-let ws,me,state;
+/* =========================================================
+   CANVAS
+========================================================= */
 
-let keys={
-  up:0,
-  down:0,
-  left:0,
-  right:0,
-  kick:0
-};
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-function size(){
-  c.width=innerWidth*devicePixelRatio;
-  c.height=innerHeight*devicePixelRatio
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-size();
-onresize=size;
+window.addEventListener("resize", resize);
+resize();
 
-function send(){
-  if(ws&&ws.readyState===1)
-    ws.send(JSON.stringify({
-      type:'input',
-      ...keys
-    }))
+/* =========================================================
+   GAME WORLD
+========================================================= */
+
+const WORLD = {
+    width: 1100,
+    height: 560,
+
+    goalDepth: 70,
+    goalHeight: 190,
+
+    playerRadius: 15,
+    ballRadius: 10
+};
+
+/* =========================================================
+   PHYSICS
+========================================================= */
+
+const PHYSICS = {
+
+    playerAcceleration: 0.10,
+    playerDamping: 0.96,
+
+    kickAcceleration: 0.07,
+    kickDamping: 0.96,
+
+    kickStrength: 5.0,
+
+    playerBounce: 0.5,
+    ballBounce: 0.5,
+
+    ballDamping: 0.99,
+
+    maxPlayerSpeed: 5.5,
+    maxBallSpeed: 15
+};
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let scoreRed = 0;
+let scoreBlue = 0;
+
+let gameSeconds = 300;
+let gameRunning = true;
+
+let lastTime = performance.now();
+let accumulator = 0;
+
+const FIXED_DT = 1 / 60;
+
+/* =========================================================
+   PLAYERS
+========================================================= */
+
+const players = [
+    {
+        id: 1,
+        team: "red",
+        x: -280,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        radius: WORLD.playerRadius,
+        color: "#e94343",
+        name: "YOU"
+    },
+
+    {
+        id: 2,
+        team: "blue",
+        x: 280,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        radius: WORLD.playerRadius,
+        color: "#3d78ff",
+        name: "BOT"
+    }
+];
+
+/* =========================================================
+   BALL
+========================================================= */
+
+const ball = {
+    x: 0,
+    y: 0,
+
+    vx: 0,
+    vy: 0,
+
+    radius: WORLD.ballRadius
+};
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+const input = {
+    x: 0,
+    y: 0,
+    kick: false
+};
+
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
+
+let joystickPointer = null;
+
+function updateJoystick(clientX, clientY) {
+
+    const rect = joystick.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = clientX - centerX;
+    let dy = clientY - centerY;
+
+    const max = rect.width / 2 - 30;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > max) {
+        dx = dx / distance * max;
+        dy = dy / distance * max;
+    }
+
+    input.x = dx / max;
+    input.y = dy / max;
+
+    stick.style.left = `calc(50% + ${dx}px)`;
+    stick.style.top = `calc(50% + ${dy}px)`;
 }
 
-ws=new WebSocket(
-  (location.protocol==='https:'?'wss':'ws')
-  +'://'+location.host
-);
+function resetJoystick() {
 
-ws.onmessage=e=>{
-  let m=JSON.parse(e.data);
+    input.x = 0;
+    input.y = 0;
 
-  if(m.type==='welcome')
-    me=m.id;
-
-  if(m.type==='state'){
-    state=m;
-
-    score.textContent=
-      m.score.blue+' - '+m.score.red;
-
-    time.textContent=
-      m.mode==='golden'
-      ?'GOLDEN'
-      :fmt(m.timeLeft)
-  }
-};
-
-onkeydown=e=>{
-  let k=e.key.toLowerCase();
-
-  if(k==='w'||k==='arrowup')
-    keys.up=1;
-
-  if(k==='s'||k==='arrowdown')
-    keys.down=1;
-
-  if(k==='a'||k==='arrowleft')
-    keys.left=1;
-
-  if(k==='d'||k==='arrowright')
-    keys.right=1;
-
-  if(k===' ')
-    keys.kick=1;
-
-  send()
-};
-
-onkeyup=e=>{
-  let k=e.key.toLowerCase();
-
-  if(k==='w'||k==='arrowup')
-    keys.up=0;
-
-  if(k==='s'||k==='arrowdown')
-    keys.down=0;
-
-  if(k==='a'||k==='arrowleft')
-    keys.left=0;
-
-  if(k==='d'||k==='arrowright')
-    keys.right=0;
-
-  if(k===' ')
-    keys.kick=0;
-
-  send()
-};
-
-function fmt(s){
-  s=Math.max(0,Math.ceil(s));
-
-  return String(Math.floor(s/60)).padStart(2,'0')
-    +':'
-    +String(s%60).padStart(2,'0')
+    stick.style.left = "50%";
+    stick.style.top = "50%";
 }
 
-function draw(){
+joystick.addEventListener("pointerdown", e => {
 
-  requestAnimationFrame(draw);
+    joystickPointer = e.pointerId;
 
-  if(!state)return;
+    joystick.setPointerCapture(e.pointerId);
 
-  let W=state.W,
-      H=state.H,
-      s=Math.min(
-        innerWidth/W,
-        innerHeight/H
-      ),
-      ox=(innerWidth-W*s)/2,
-      oy=(innerHeight-H*s)/2;
+    updateJoystick(e.clientX, e.clientY);
+});
 
-  x.setTransform(
-    devicePixelRatio,
-    0,
-    0,
-    devicePixelRatio,
-    0,
-    0
-  );
+joystick.addEventListener("pointermove", e => {
 
-  x.clearRect(
-    0,
-    0,
-    innerWidth,
-    innerHeight
-  );
+    if (e.pointerId !== joystickPointer) return;
 
-  x.save();
+    updateJoystick(e.clientX, e.clientY);
+});
 
-  x.translate(ox,oy);
-  x.scale(s,s);
+joystick.addEventListener("pointerup", e => {
 
-  x.fillStyle='#168b45';
-  x.fillRect(0,0,W,H);
+    if (e.pointerId !== joystickPointer) return;
 
-  x.strokeStyle='white';
-  x.lineWidth=5;
-  x.strokeRect(0,0,W,H);
+    joystickPointer = null;
 
-  x.beginPath();
-  x.moveTo(W/2,0);
-  x.lineTo(W/2,H);
-  x.stroke();
+    resetJoystick();
+});
 
-  x.beginPath();
-  x.arc(
-    W/2,
-    H/2,
-    75,
-    0,
-    7
-  );
-  x.stroke();
+joystick.addEventListener("pointercancel", () => {
 
-  x.fillStyle='white';
+    joystickPointer = null;
 
-  x.beginPath();
-  x.arc(
-    state.ball.x,
-    state.ball.y,
-    13,
-    0,
-    7
-  );
-  x.fill();
+    resetJoystick();
+});
 
-  for(const p of state.players){
+/* =========================================================
+   KICK
+========================================================= */
 
-    x.fillStyle=
-      p.team==='blue'
-      ?'#1680ff'
-      :'#ef3333';
+const kickButton = document.getElementById("kick");
 
-    x.beginPath();
+kickButton.addEventListener("pointerdown", e => {
 
-    x.arc(
-      p.x,
-      p.y,
-      18,
-      0,
-      7
+    e.preventDefault();
+
+    input.kick = true;
+
+});
+
+kickButton.addEventListener("pointerup", e => {
+
+    e.preventDefault();
+
+    input.kick = false;
+
+});
+
+kickButton.addEventListener("pointercancel", () => {
+
+    input.kick = false;
+
+});
+
+/* =========================================================
+   KEYBOARD SUPPORT
+========================================================= */
+
+const keys = {};
+
+window.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    if (
+        e.key === " " ||
+        e.key.startsWith("Arrow")
+    ) {
+        e.preventDefault();
+    }
+
+});
+
+window.addEventListener("keyup", e => {
+
+    keys[e.key.toLowerCase()] = false;
+
+});
+
+function keyboardInput() {
+
+    let x = input.x;
+    let y = input.y;
+
+    if (keys["arrowleft"] || keys["a"]) x -= 1;
+    if (keys["arrowright"] || keys["d"]) x += 1;
+    if (keys["arrowup"] || keys["w"]) y -= 1;
+    if (keys["arrowdown"] || keys["s"]) y += 1;
+
+    const len = Math.sqrt(x*x + y*y);
+
+    if (len > 1) {
+        x /= len;
+        y /= len;
+    }
+
+    return { x, y };
+}
+
+/* =========================================================
+   MATH
+========================================================= */
+
+function clamp(value, min, max) {
+
+    return Math.max(min, Math.min(max, value));
+
+}
+
+function distance(a, b) {
+
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.sqrt(dx * dx + dy * dy);
+
+}
+
+function normalize(x, y) {
+
+    const len = Math.sqrt(x*x + y*y);
+
+    if (len < 0.00001) {
+        return { x: 0, y: 0 };
+    }
+
+    return {
+        x: x / len,
+        y: y / len
+    };
+}
+
+/* =========================================================
+   PLAYER MOVEMENT
+========================================================= */
+
+function updatePlayer(player, dt) {
+
+    let moveX = 0;
+    let moveY = 0;
+
+    if (player.id === 1) {
+
+        const k = keyboardInput();
+
+        moveX = k.x;
+        moveY = k.y;
+
+    } else {
+
+        /* Simple BOT */
+
+        const dx = ball.x - player.x;
+        const dy = ball.y - player.y;
+
+        const dir = normalize(dx, dy);
+
+        moveX = dir.x;
+        moveY = dir.y;
+
+        /*
+         * BOT doesn't constantly chase the ball
+         * too aggressively.
+         */
+        if (distance(player, ball) > 500) {
+            moveX = 0;
+            moveY = 0;
+        }
+    }
+
+    const moving =
+        Math.abs(moveX) > 0.01 ||
+        Math.abs(moveY) > 0.01;
+
+    const acceleration =
+        input.kick && player.id === 1
+        ? PHYSICS.kickAcceleration
+        : PHYSICS.playerAcceleration;
+
+    if (moving) {
+
+        player.vx += moveX * acceleration * 60 * dt;
+        player.vy += moveY * acceleration * 60 * dt;
+
+    }
+
+    const damping =
+        input.kick && player.id === 1
+        ? PHYSICS.kickDamping
+        : PHYSICS.playerDamping;
+
+    player.vx *= Math.pow(damping, dt * 60);
+    player.vy *= Math.pow(damping, dt * 60);
+
+    const speed =
+        Math.sqrt(
+            player.vx * player.vx +
+            player.vy * player.vy
+        );
+
+    if (speed > PHYSICS.maxPlayerSpeed) {
+
+        player.vx =
+            player.vx / speed *
+            PHYSICS.maxPlayerSpeed;
+
+        player.vy =
+            player.vy / speed *
+            PHYSICS.maxPlayerSpeed;
+    }
+
+    player.x += player.vx * 60 * dt;
+    player.y += player.vy * 60 * dt;
+
+    keepPlayerInside(player);
+}
+
+/* =========================================================
+   KEEP PLAYER INSIDE FIELD
+========================================================= */
+
+function keepPlayerInside(player) {
+
+    const halfW = WORLD.width / 2;
+    const halfH = WORLD.height / 2;
+
+    player.x = clamp(
+        player.x,
+        -halfW + player.radius,
+        halfW - player.radius
     );
 
-    x.fill();
-
-    x.fillStyle='white';
-    x.font='12px Arial';
-    x.textAlign='center';
-
-    x.fillText(
-      p.name,
-      p.x,
-      p.y-24
+    player.y = clamp(
+        player.y,
+        -halfH + player.radius,
+        halfH - player.radius
     );
-  }
-
-  x.restore()
 }
 
-draw();
+/* =========================================================
+   BALL PHYSICS
+========================================================= */
+
+function updateBall(dt) {
+
+    ball.vx *= Math.pow(PHYSICS.ballDamping, dt * 60);
+    ball.vy *= Math.pow(PHYSICS.ballDamping, dt * 60);
+
+    const speed =
+        Math.sqrt(
+            ball.vx * ball.vx +
+            ball.vy * ball.vy
+        );
+
+    if (speed > PHYSICS.maxBallSpeed) {
+
+        ball.vx =
+            ball.vx / speed *
+            PHYSICS.maxBallSpeed;
+
+        ball.vy =
+            ball.vy / speed *
+            PHYSICS.maxBallSpeed;
+    }
+
+    ball.x += ball.vx * 60 * dt;
+    ball.y += ball.vy * 60 * dt;
+
+    collideBallWithWalls();
+
+    collidePlayerWithBall(players[0]);
+
+    collidePlayerWithBall(players[1]);
+}
+
+/* =========================================================
+   BALL / WALL COLLISION
+========================================================= */
+
+function collideBallWithWalls() {
+
+    const halfW = WORLD.width / 2;
+    const halfH = WORLD.height / 2;
+
+    const goalTop =
+        WORLD.goalHeight / 2;
+
+    const goalBottom =
+        -WORLD.goalHeight / 2;
+
+    /* TOP */
+
+    if (ball.y - ball.radius < -halfH) {
+
+        ball.y = -halfH + ball.radius;
+
+        ball.vy =
+            Math.abs(ball.vy) *
+            PHYSICS.ballBounce;
+    }
+
+    /* BOTTOM */
+
+    if (ball.y + ball.radius > halfH) {
+
+        ball.y = halfH - ball.radius;
+
+        ball.vy =
+            -Math.abs(ball.vy) *
+            PHYSICS.ballBounce;
+    }
+
+    /*
+     * LEFT WALL
+     * Leave opening for goal.
+     */
+
+    if (
+        ball.x - ball.radius < -halfW &&
+        (ball.y > goalTop || ball.y < goalBottom)
+    ) {
+
+        ball.x = -halfW + ball.radius;
+
+        ball.vx =
+            Math.abs(ball.vx) *
+            PHYSICS.ballBounce;
+    }
+
+    /*
+     * RIGHT WALL
+     */
+
+    if (
+        ball.x + ball.radius > halfW &&
+        (ball.y > goalTop || ball.y < goalBottom)
+    ) {
+
+        ball.x = halfW - ball.radius;
+
+        ball.vx =
+            -Math.abs(ball.vx) *
+            PHYSICS.ballBounce;
+    }
+
+    checkGoal();
+}
+
+/* =========================================================
+   PLAYER / BALL COLLISION
+========================================================= */
+
+function collidePlayerWithBall(player) {
+
+    let dx = ball.x - player.x;
+    let dy = ball.y - player.y;
+
+    let dist =
+        Math.sqrt(dx * dx + dy * dy);
+
+    const minDist =
+        player.radius +
+        ball.radius;
+
+    if (dist === 0) {
+
+        dx = 1;
+        dy = 0;
+
+        dist = 1;
+    }
+
+    if (dist < minDist) {
+
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        const overlap =
+            minDist - dist;
+
+        ball.x += nx * overlap;
+        ball.y += ny * overlap;
+
+        const relativeVx =
+            ball.vx - player.vx;
+
+        const relativeVy =
+            ball.vy - player.vy;
+
+        const relativeVelocity =
+            relativeVx * nx +
+            relativeVy * ny;
+
+        if (relativeVelocity < 0) {
+
+            const impulse =
+                -(1 + PHYSICS.ballBounce) *
+                relativeVelocity;
+
+            ball.vx +=
+                nx * impulse;
+
+            ball.vy +=
+                ny * impulse;
+        }
+
+        /*
+         * Kick
+         */
+
+        if (
+            player.id === 1 &&
+            input.kick
+        ) {
+
+            const kickDirection =
+                normalize(
+                    ball.x - player.x,
+                    ball.y - player.y
+                );
+
+            ball.vx +=
+                kickDirection.x *
+                PHYSICS.kickStrength;
+
+            ball.vy +=
+                kickDirection.y *
+                PHYSICS.kickStrength;
+
+            player.vx -=
+                kickDirection.x * 0.25;
+
+            player.vy -=
+                kickDirection.y * 0.25;
+        }
+
+        /*
+         * BOT kick
+         */
+
+        if (
+            player.id === 2 &&
+            distance(player, ball) < minDist + 4
+        ) {
+
+            const direction =
+                normalize(
+                    -ball.x,
+                    -ball.y
+                );
+
+            ball.vx +=
+                direction.x * 3;
+
+            ball.vy +=
+                direction.y * 3;
+        }
+    }
+}
+
+/* =========================================================
+   GOAL
+========================================================= */
+
+function checkGoal() {
+
+    const halfW =
+        WORLD.width / 2;
+
+    const goalHalf =
+        WORLD.goalHeight / 2;
+
+    if (
+        ball.x < -halfW &&
+        Math.abs(ball.y) < goalHalf
+    ) {
+
+        scoreBlue++;
+
+        updateScore();
+
+        goal("BLUE");
+
+        return;
+    }
+
+    if (
+        ball.x > halfW &&
+        Math.abs(ball.y) < goalHalf
+    ) {
+
+        scoreRed++;
+
+        updateScore();
+
+        goal("RED");
+
+        return;
+    }
+}
+
+/* =========================================================
+   RESET AFTER GOAL
+========================================================= */
+
+function goal(team) {
+
+    gameRunning = false;
+
+    const status =
+        document.getElementById("status");
+
+    status.textContent =
+        team + " GOOOOOL!";
+
+    status.style.display = "block";
+
+    setTimeout(() => {
+
+        resetPositions();
+
+        status.style.display = "none";
+
+        gameRunning = true;
+
+    }, 1200);
+}
+
+function resetPositions() {
+
+    players[0].x = -280;
+    players[0].y = 0;
+
+    players[1].x = 280;
+    players[1].y = 0;
+
+    players[0].vx = 0;
+    players[0].vy = 0;
+
+    players[1].vx = 0;
+    players[1].vy = 0;
+
+    ball.x = 0;
+    ball.y = 0;
+
+    ball.vx = 0;
+    ball.vy = 0;
+}
+
+/* =========================================================
+   SCORE
+========================================================= */
+
+function updateScore() {
+
+    document.getElementById("score").textContent =
+        `${scoreRed} - ${scoreBlue}`;
+}
+
+/* =========================================================
+   CLOCK
+========================================================= */
+
+function updateClock(dt) {
+
+    if (!gameRunning) return;
+
+    gameSeconds -= dt;
+
+    if (gameSeconds < 0) {
+        gameSeconds = 0;
+        gameRunning = false;
+    }
+
+    const minutes =
+        Math.floor(gameSeconds / 60);
+
+    const seconds =
+        Math.floor(gameSeconds % 60);
+
+    document.getElementById("time").textContent =
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+}
+
+/* =========================================================
+   WORLD -> SCREEN
+========================================================= */
+
+function getScale() {
+
+    const margin = 20;
+
+    return Math.min(
+        (W - margin * 2) / WORLD.width,
+        (H - 90) / WORLD.height
+    );
+}
+
+function worldToScreen(x, y) {
+
+    const scale = getScale();
+
+    return {
+        x: W / 2 + x * scale,
+        y: H / 2 + y * scale
+    };
+}
+
+/* =========================================================
+   DRAW FIELD
+========================================================= */
+
+function drawField() {
+
+    ctx.clearRect(0, 0, W, H);
+
+    const scale = getScale();
+
+    const left =
+        W / 2 -
+        WORLD.width / 2 * scale;
+
+    const top =
+        H / 2 -
+        WORLD.height / 2 * scale;
+
+    const width =
+        WORLD.width * scale;
+
+    const height =
+        WORLD.height * scale;
+
+    /*
+     * Grass
+     */
+
+    ctx.fillStyle = "#159447";
+
+    ctx.fillRect(
+        left,
+        top,
+        width,
+        height
+    );
+
+    /*
+     * Grass stripes
+     */
+
+    for (let i = 0; i < 10; i++) {
+
+        ctx.fillStyle =
+            i % 2 === 0
+            ? "rgba(255,255,255,.025)"
+            : "rgba(0,0,0,.025)";
+
+        ctx.fillRect(
+            left + i * width / 10,
+            top,
+            width / 10,
+            height
+        );
+    }
+
+    /*
+     * Outer border
+     */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.85)";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+        left,
+        top,
+        width,
+        height
+    );
+
+    /*
+     * Halfway line
+     */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        W / 2,
+        top
+    );
+
+    ctx.lineTo(
+        W / 2,
+        top + height
+    );
+
+    ctx.stroke();
+
+    /*
+     * Center circle
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W / 2,
+        H / 2,
+        90 * scale,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.stroke();
+
+    /*
+     * Center point
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W / 2,
+        H / 2,
+        4,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle = "white";
+
+    ctx.fill();
+
+    drawPenaltyAreas(scale);
+
+    drawGoals(scale);
+}
+
+/* =========================================================
+   PENALTY AREAS
+========================================================= */
+
+function drawPenaltyAreas(scale) {
+
+    const halfW =
+        WORLD.width / 2;
+
+    const halfH =
+        WORLD.height / 2;
+
+    const boxW = 150;
+    const boxH = 280;
+
+    const top =
+        H / 2 -
+        boxH / 2 * scale;
+
+    const h =
+        boxH * scale;
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.75)";
+
+    ctx.lineWidth = 2;
+
+    /*
+     * LEFT
+     */
+
+    ctx.strokeRect(
+        W / 2 +
+        (-halfW) * scale,
+        top,
+        boxW * scale,
+        h
+    );
+
+    /*
+     * RIGHT
+     */
+
+    ctx.strokeRect(
+        W / 2 +
+        (halfW - boxW) * scale,
+        top,
+        boxW * scale,
+        h
+    );
+}
+
+/* =========================================================
+   GOALS
+========================================================= */
+
+function drawGoals(scale) {
+
+    const halfW =
+        WORLD.width / 2;
+
+    const goalH =
+        WORLD.goalHeight;
+
+    const goalDepth =
+        WORLD.goalDepth;
+
+    const top =
+        H / 2 -
+        goalH / 2 * scale;
+
+    const height =
+        goalH * scale;
+
+    ctx.lineWidth = 4;
+
+    /*
+     * LEFT GOAL
+     */
+
+    const leftX =
+        W / 2 -
+        halfW * scale;
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.13)";
+
+    ctx.fillRect(
+        leftX - goalDepth * scale,
+        top,
+        goalDepth * scale,
+        height
+    );
+
+    ctx.strokeStyle = "#eeeeee";
+
+    ctx.strokeRect(
+        leftX - goalDepth * scale,
+        top,
+        goalDepth * scale,
+        height
+    );
+
+    /*
+     * RIGHT GOAL
+     */
+
+    const rightX =
+        W / 2 +
+        halfW * scale;
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.13)";
+
+    ctx.fillRect(
+        rightX,
+        top,
+        goalDepth * scale,
+        height
+    );
+
+    ctx.strokeStyle = "#eeeeee";
+
+    ctx.strokeRect(
+        rightX,
+        top,
+        goalDepth * scale,
+        height
+    );
+}
+
+/* =========================================================
+   DRAW BALL
+========================================================= */
+
+function drawBall() {
+
+    const p =
+        worldToScreen(
+            ball.x,
+            ball.y
+        );
+
+    const scale = getScale();
+
+    const r =
+        ball.radius * scale;
+
+    /*
+     * Shadow
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.x + 2,
+        p.y + 3,
+        r,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+    ctx.fill();
+
+    /*
+     * Ball
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.x,
+        p.y,
+        r,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.fill();
+
+    ctx.strokeStyle =
+        "rgba(0,0,0,.7)";
+
+    ctx.lineWidth = 1.5;
+
+    ctx.stroke();
+
+    /*
+     * Small black center
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.x,
+        p.y,
+        r * .23,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle = "#222";
+
+    ctx.fill();
+}
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(player) {
+
+    const p =
+        worldToScreen(
+            player.x,
+            player.y
+        );
+
+    const scale = getScale();
+
+    const r =
+        player.radius * scale;
+
+    /*
+     * Shadow
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.x + 2,
+        p.y + 3,
+        r,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+    ctx.fill();
+
+    /*
+     * Player body
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        p.x,
+        p.y,
+        r,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        player.color;
+
+    ctx.fill();
+
+    ctx.strokeStyle = "white";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+    /*
+     * Direction indicator
+     */
+
+    let dx = player.vx;
+    let dy = player.vy;
+
+    const len =
+        Math.sqrt(dx*dx + dy*dy);
+
+    if (len > .1) {
+
+        dx /= len;
+        dy /= len;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            p.x,
+            p.y
+        );
+
+        ctx.lineTo(
+            p.x + dx * r * .75,
+            p.y + dy * r * .75
+        );
+
+        ctx.strokeStyle =
+            "rgba(255,255,255,.8)";
+
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+    }
+
+    /*
+     * Name
+     */
+
+    if (player.id === 1) {
+
+        ctx.font =
+            "bold 10px Arial";
+
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = "white";
+
+        ctx.fillText(
+            player.name,
+            p.x,
+            p.y - r - 6
+        );
+    }
+}
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+function render() {
+
+    drawField();
+
+    drawPlayer(players[0]);
+
+    drawPlayer(players[1]);
+
+    drawBall();
+}
+
+/* =========================================================
+   WEBSOCKET
+========================================================= */
+
+/*
+ * WebSocket is optional.
+ *
+ * The game can still run locally if the server
+ * doesn't provide a WebSocket endpoint.
+ */
+
+let socket = null;
+
+function connectSocket() {
+
+    try {
+
+        const protocol =
+            location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+        socket =
+            new WebSocket(
+                protocol +
+                "//" +
+                location.host
+            );
+
+        socket.addEventListener("open", () => {
+
+            console.log(
+                "WebSocket connected"
+            );
+
+            socket.send(
+                JSON.stringify({
+                    type: "join",
+                    name: "YOU"
+                })
+            );
+        });
+
+        socket.addEventListener("message", event => {
+
+            try {
+
+                const data =
+                    JSON.parse(event.data);
+
+                /*
+                 * Compatible with simple
+                 * state broadcasts.
+                 */
+
+                if (data.type === "state") {
+
+                    if (data.ball) {
+
+                        ball.x =
+                            Number(data.ball.x) ||
+                            ball.x;
+
+                        ball.y =
+                            Number(data.ball.y) ||
+                            ball.y;
+                    }
+                }
+
+            } catch (err) {
+
+                console.log(
+                    "Server message:",
+                    event.data
+                );
+            }
+        });
+
+        socket.addEventListener("error", err => {
+
+            console.log(
+                "WebSocket unavailable",
+                err
+            );
+
+        });
+
+    } catch (err) {
+
+        console.log(
+            "WebSocket not available"
+        );
+    }
+}
+
+function sendState() {
+
+    if (
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) {
+        return;
+    }
+
+    try {
+
+        socket.send(
+            JSON.stringify({
+                type: "state",
+
+                player: {
+                    x: players[0].x,
+                    y: players[0].y,
+                    vx: players[0].vx,
+                    vy: players[0].vy
+                },
+
+                ball: {
+                    x: ball.x,
+                    y: ball.y,
+                    vx: ball.vx,
+                    vy: ball.vy
+                },
+
+                score: {
+                    red: scoreRed,
+                    blue: scoreBlue
+                }
+            })
+        );
+
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function update(dt) {
+
+    if (!gameRunning) return;
+
+    updatePlayer(
+        players[0],
+        dt
+    );
+
+    updatePlayer(
+        players[1],
+        dt
+    );
+
+    updateBall(dt);
+
+    updateClock(dt);
+}
+
+function gameLoop(now) {
+
+    let frameTime =
+        (now - lastTime) / 1000;
+
+    lastTime = now;
+
+    frameTime =
+        Math.min(frameTime, 0.1);
+
+    accumulator += frameTime;
+
+    while (accumulator >= FIXED_DT) {
+
+        update(FIXED_DT);
+
+        accumulator -= FIXED_DT;
+    }
+
+    render();
+
+    sendState();
+
+    requestAnimationFrame(gameLoop);
+}
+
+/* =========================================================
+   START
+========================================================= */
+
+resetPositions();
+
+updateScore();
+
+connectSocket();
+
+requestAnimationFrame(gameLoop);
+
 </script>
 
 </body>
