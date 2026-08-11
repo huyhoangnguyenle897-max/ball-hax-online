@@ -5,10 +5,9 @@
 
 <meta name="viewport"
       content="width=device-width,
-               initial-scale=1,
-               maximum-scale=1,
-               user-scalable=no,
-               viewport-fit=cover">
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
 <title>Ball Hax Online</title>
 
@@ -25,8 +24,11 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+
     background: #111;
+
     font-family: Arial, sans-serif;
+
     touch-action: none;
 }
 
@@ -41,10 +43,13 @@ body {
 #game {
     position: fixed;
     inset: 0;
+
     width: 100%;
     height: 100%;
+
     display: block;
-    background: #168b45;
+
+    background: #168a45;
 }
 
 /* =====================================================
@@ -54,69 +59,81 @@ body {
 #lobby {
     position: fixed;
     inset: 0;
+
     z-index: 100;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
-    padding: 20px;
 
     background:
         radial-gradient(
             circle at center,
-            rgba(25,150,75,.45),
-            rgba(0,0,0,.92)
+            #168a45 0%,
+            #087036 45%,
+            #064526 100%
         );
 }
 
-.lobbyBox {
-    width: min(420px, 92vw);
-    padding: 28px 22px 24px;
+#lobbyBox {
+    width: min(90vw, 390px);
 
-    border-radius: 20px;
+    padding: 28px 24px 25px;
 
-    background: rgba(20,20,20,.94);
+    border-radius: 18px;
 
-    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(0, 0, 0, .48);
+
+    border: 1px solid
+        rgba(255,255,255,.18);
 
     box-shadow:
-        0 20px 60px rgba(0,0,0,.6);
+        0 15px 45px rgba(0,0,0,.45);
 
     text-align: center;
 
     color: white;
 }
 
-.lobbyBall {
-    font-size: 48px;
-    margin-bottom: 4px;
-}
+#lobbyTitle {
+    font-size: 27px;
 
-.lobbyTitle {
-    font-size: 26px;
     font-weight: bold;
-    margin-bottom: 6px;
+
+    margin-bottom: 7px;
+
+    text-shadow:
+        0 3px 8px rgba(0,0,0,.6);
 }
 
-.lobbySubtitle {
-    color: rgba(255,255,255,.65);
+#lobbySubtitle {
     font-size: 13px;
-    margin-bottom: 22px;
+
+    color:
+        rgba(255,255,255,.7);
+
+    margin-bottom: 23px;
 }
 
 #nameInput {
     width: 100%;
-    height: 50px;
 
-    border: 1px solid rgba(255,255,255,.25);
-    border-radius: 12px;
+    height: 48px;
+
+    padding: 0 15px;
+
+    border-radius: 10px;
+
+    border: 2px solid
+        rgba(255,255,255,.2);
 
     outline: none;
 
-    background: rgba(255,255,255,.08);
+    background:
+        rgba(255,255,255,.1);
 
     color: white;
-
-    padding: 0 15px;
 
     font-size: 16px;
 
@@ -124,40 +141,51 @@ body {
 }
 
 #nameInput::placeholder {
-    color: rgba(255,255,255,.4);
+    color:
+        rgba(255,255,255,.5);
+}
+
+#nameInput:focus {
+    border-color:
+        rgba(255,255,255,.7);
 }
 
 #joinButton {
     width: 100%;
+
     height: 50px;
 
     margin-top: 12px;
 
     border: 0;
-    border-radius: 12px;
 
-    background: #19a653;
+    border-radius: 10px;
+
+    background: #ef4148;
 
     color: white;
 
     font-size: 17px;
+
     font-weight: bold;
 
-    cursor: pointer;
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.3);
 }
 
 #joinButton:active {
     transform: scale(.97);
 }
 
-#lobbyError {
-    min-height: 20px;
+#connectionStatus {
+    margin-top: 14px;
 
-    margin-top: 12px;
+    min-height: 18px;
 
-    color: #ff6666;
+    font-size: 12px;
 
-    font-size: 13px;
+    color:
+        rgba(255,255,255,.65);
 }
 
 /* =====================================================
@@ -167,11 +195,11 @@ body {
 #scoreboard {
     position: fixed;
 
-    top: max(8px, env(safe-area-inset-top));
-
+    top: 8px;
     left: 50%;
 
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
     z-index: 20;
 
@@ -182,33 +210,33 @@ body {
     font-weight: bold;
 
     text-shadow:
-        0 2px 4px rgba(0,0,0,.9);
+        0 2px 3px rgba(0,0,0,.8),
+        0 0 5px rgba(0,0,0,.5);
 
     pointer-events: none;
+
+    user-select: none;
 }
 
 #title {
-    font-size: 19px;
+    font-size: 20px;
 }
 
 #score {
-    font-size: 20px;
-
-    margin-top: 1px;
+    font-size: 19px;
 }
 
 #time {
-    font-size: 16px;
-
-    margin-top: 1px;
+    font-size: 17px;
 }
 
-#roundMode {
-    font-size: 11px;
+#round {
+    font-size: 12px;
 
-    color: rgba(255,255,255,.72);
+    margin-top: 1px;
 
-    margin-top: 2px;
+    color:
+        rgba(255,255,255,.8);
 }
 
 /* =====================================================
@@ -221,11 +249,10 @@ body {
     left: 50%;
     top: 48%;
 
-    transform: translate(-50%, -50%);
+    transform:
+        translate(-50%, -50%);
 
     z-index: 30;
-
-    display: none;
 
     color: white;
 
@@ -233,14 +260,153 @@ body {
 
     font-weight: bold;
 
-    text-align: center;
-
     text-shadow:
-        0 3px 8px rgba(0,0,0,.9);
+        0 3px 6px black;
+
+    display: none;
 
     pointer-events: none;
 
-    white-space: nowrap;
+    text-align: center;
+}
+
+/* =====================================================
+   PLAYER COUNT
+===================================================== */
+
+#playerCount {
+    position: fixed;
+
+    right: 13px;
+    top: 13px;
+
+    z-index: 20;
+
+    color: white;
+
+    font-size: 12px;
+
+    font-weight: bold;
+
+    text-align: right;
+
+    text-shadow:
+        0 2px 3px black;
+
+    pointer-events: none;
+}
+
+.teamCount {
+    display: block;
+
+    line-height: 17px;
+}
+
+.blueDot,
+.redDot {
+    display: inline-block;
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    margin-right: 5px;
+
+    vertical-align: -1px;
+
+    border: 1px solid
+        rgba(255,255,255,.8);
+}
+
+.blueDot {
+    background: #3d78ff;
+}
+
+.redDot {
+    background: #ef4148;
+}
+
+/* =====================================================
+   CHAT
+===================================================== */
+
+#chat {
+    position: fixed;
+
+    left: 14px;
+    top: 190px;
+
+    z-index: 25;
+
+    width: min(350px, 48vw);
+
+    pointer-events: auto;
+}
+
+#chatMessages {
+    max-height: 120px;
+
+    overflow: hidden;
+
+    margin-bottom: 6px;
+}
+
+.chatMessage {
+    color:
+        rgba(255,255,255,.72);
+
+    font-size: 12px;
+
+    text-shadow:
+        0 2px 3px rgba(0,0,0,.7);
+
+    margin-bottom: 4px;
+}
+
+#chatForm {
+    display: flex;
+
+    gap: 7px;
+}
+
+#chatInput {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 36px;
+
+    border: 0;
+
+    outline: none;
+
+    border-radius: 9px;
+
+    padding:
+        0 10px;
+
+    background:
+        rgba(0,0,0,.35);
+
+    color: white;
+
+    font-size: 13px;
+}
+
+#chatSend {
+    width: 48px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background:
+        rgba(255,255,255,.18);
+
+    color: white;
+
+    font-size: 18px;
 }
 
 /* =====================================================
@@ -250,25 +416,22 @@ body {
 #joystick {
     position: fixed;
 
-    left: 24px;
-
-    bottom:
-        calc(28px + env(safe-area-inset-bottom));
+    left: 25px;
+    bottom: 35px;
 
     width: 135px;
     height: 135px;
 
     border:
-        3px solid rgba(255,255,255,.58);
+        3px solid
+        rgba(255,255,255,.65);
 
     border-radius: 50%;
 
+    z-index: 50;
+
     background:
-        rgba(255,255,255,.035);
-
-    z-index: 40;
-
-    touch-action: none;
+        rgba(255,255,255,.04);
 }
 
 #stick {
@@ -286,32 +449,30 @@ body {
     border-radius: 50%;
 
     background:
-        rgba(255,255,255,.32);
+        rgba(255,255,255,.35);
 
     border:
-        2px solid rgba(255,255,255,.75);
-
-    pointer-events: none;
+        2px solid
+        rgba(255,255,255,.8);
 }
 
 /* =====================================================
-   KICK
+   KICK BUTTON
 ===================================================== */
 
 #kick {
     position: fixed;
 
-    right: 24px;
+    right: 25px;
+    bottom: 35px;
 
-    bottom:
-        calc(28px + env(safe-area-inset-bottom));
-
-    width: 104px;
-    height: 104px;
+    width: 100px;
+    height: 100px;
 
     border-radius: 50%;
 
-    border: 3px solid white;
+    border:
+        3px solid white;
 
     background: #ef4148;
 
@@ -321,17 +482,16 @@ body {
 
     font-weight: bold;
 
-    z-index: 40;
+    z-index: 50;
 
     box-shadow:
-        0 5px 15px rgba(0,0,0,.35);
-
-    touch-action: none;
+        0 4px 12px rgba(0,0,0,.35);
 }
 
 #kick:active {
     transform: scale(.93);
-    background: #d72e35;
+
+    background: #d62e35;
 }
 
 /* =====================================================
@@ -342,166 +502,21 @@ body {
     position: fixed;
 
     left: 50%;
+    bottom: 8px;
 
-    bottom:
-        calc(7px + env(safe-area-inset-bottom));
-
-    transform: translateX(-50%);
+    transform:
+        translateX(-50%);
 
     color:
-        rgba(255,255,255,.62);
+        rgba(255,255,255,.65);
 
     font-size: 11px;
 
-    z-index: 25;
+    z-index: 40;
 
     pointer-events: none;
 
     white-space: nowrap;
-}
-
-/* =====================================================
-   CHAT
-===================================================== */
-
-#chat {
-    position: fixed;
-
-    left: 12px;
-
-    top: 90px;
-
-    width: min(290px, 48vw);
-
-    z-index: 50;
-
-    pointer-events: auto;
-}
-
-#chatMessages {
-    max-height: 145px;
-
-    overflow: hidden;
-
-    color: white;
-
-    font-size: 12px;
-
-    text-shadow:
-        0 1px 3px black;
-}
-
-.chatLine {
-    margin-bottom: 3px;
-
-    word-break: break-word;
-}
-
-.chatName {
-    font-weight: bold;
-}
-
-#chatForm {
-    display: flex;
-
-    margin-top: 5px;
-
-    gap: 4px;
-}
-
-#chatInput {
-    min-width: 0;
-
-    flex: 1;
-
-    height: 30px;
-
-    border: 1px solid rgba(255,255,255,.25);
-
-    border-radius: 8px;
-
-    background: rgba(0,0,0,.38);
-
-    color: white;
-
-    padding: 0 8px;
-
-    outline: none;
-
-    font-size: 12px;
-}
-
-#chatSend {
-    width: 42px;
-
-    border: 0;
-
-    border-radius: 8px;
-
-    background: rgba(255,255,255,.2);
-
-    color: white;
-}
-
-/* =====================================================
-   PLAYER LIST
-===================================================== */
-
-#playerList {
-    position: fixed;
-
-    right: 10px;
-
-    top: 85px;
-
-    z-index: 20;
-
-    color: white;
-
-    font-size: 11px;
-
-    text-align: right;
-
-    pointer-events: none;
-
-    text-shadow:
-        0 1px 3px black;
-}
-
-.teamBlue {
-    color: #75a5ff;
-}
-
-.teamRed {
-    color: #ff7070;
-}
-
-/* =====================================================
-   DISCONNECT
-===================================================== */
-
-#connection {
-    position: fixed;
-
-    left: 50%;
-
-    top: 5px;
-
-    transform: translateX(-50%);
-
-    z-index: 60;
-
-    display: none;
-
-    padding: 5px 10px;
-
-    border-radius: 8px;
-
-    background: rgba(180,0,0,.8);
-
-    color: white;
-
-    font-size: 11px;
 }
 
 /* =====================================================
@@ -520,14 +535,18 @@ body {
         bottom: 40px;
     }
 
-    #help {
-        bottom: 12px;
+    #chat {
+        top: 160px;
     }
 }
 </style>
 </head>
 
 <body>
+
+<!-- =====================================================
+     GAME
+===================================================== -->
 
 <canvas id="game"></canvas>
 
@@ -538,22 +557,19 @@ body {
 
 <div id="lobby">
 
-    <div class="lobbyBox">
+    <div id="lobbyBox">
 
-        <div class="lobbyBall">
-            ⚽
+        <div id="lobbyTitle">
+            ⚽ BALL HAX ONLINE
         </div>
 
-        <div class="lobbyTitle">
-            BALL HAX ONLINE
-        </div>
-
-        <div class="lobbySubtitle">
-            Nhập tên của bạn để vào phòng
+        <div id="lobbySubtitle">
+            Nhập tên người chơi để vào trận
         </div>
 
         <input
             id="nameInput"
+            type="text"
             maxlength="16"
             autocomplete="off"
             placeholder="Tên người chơi"
@@ -563,7 +579,9 @@ body {
             VÀO TRẬN
         </button>
 
-        <div id="lobbyError"></div>
+        <div id="connectionStatus">
+            Đang kết nối máy chủ...
+        </div>
 
     </div>
 
@@ -571,7 +589,7 @@ body {
 
 
 <!-- =====================================================
-     SCORE
+     SCOREBOARD
 ===================================================== -->
 
 <div id="scoreboard">
@@ -588,17 +606,36 @@ body {
         05:00
     </div>
 
-    <div id="roundMode">
+    <div id="round">
         Vòng 1
     </div>
 
 </div>
 
 
+<!-- =====================================================
+     STATUS
+===================================================== -->
+
 <div id="status"></div>
 
-<div id="connection">
-    Mất kết nối máy chủ
+
+<!-- =====================================================
+     PLAYER COUNT
+===================================================== -->
+
+<div id="playerCount">
+
+    <span class="teamCount">
+        <span class="blueDot"></span>
+        <span id="blueCount">0</span>
+    </span>
+
+    <span class="teamCount">
+        <span class="redDot"></span>
+        <span id="redCount">0</span>
+    </span>
+
 </div>
 
 
@@ -614,12 +651,14 @@ body {
 
         <input
             id="chatInput"
+            type="text"
             maxlength="80"
             autocomplete="off"
             placeholder="Chat..."
         >
 
-        <button id="chatSend">
+        <button id="chatSend"
+                type="submit">
             ➤
         </button>
 
@@ -629,14 +668,7 @@ body {
 
 
 <!-- =====================================================
-     PLAYER LIST
-===================================================== -->
-
-<div id="playerList"></div>
-
-
-<!-- =====================================================
-     CONTROLS
+     JOYSTICK
 ===================================================== -->
 
 <div id="joystick">
@@ -645,6 +677,10 @@ body {
 
 </div>
 
+
+<!-- =====================================================
+     KICK
+===================================================== -->
 
 <button id="kick">
     ĐÁ
@@ -659,9 +695,9 @@ body {
 <script>
 "use strict";
 
-/* =====================================================
+/* =========================================================
    CANVAS
-===================================================== */
+========================================================= */
 
 const canvas =
     document.getElementById("game");
@@ -669,13 +705,8 @@ const canvas =
 const ctx =
     canvas.getContext("2d");
 
-
-let W =
-    window.innerWidth;
-
-let H =
-    window.innerHeight;
-
+let W = window.innerWidth;
+let H = window.innerHeight;
 
 let DPR = 1;
 
@@ -683,7 +714,6 @@ let DPR = 1;
 function resize() {
 
     W = window.innerWidth;
-
     H = window.innerHeight;
 
     DPR =
@@ -720,46 +750,32 @@ window.addEventListener(
     resize
 );
 
-
 resize();
 
 
-/* =====================================================
+/* =========================================================
    WORLD
-===================================================== */
+========================================================= */
 
-const WORLD = {
+let WORLD_WIDTH = 1400;
+let WORLD_HEIGHT = 700;
 
-    width: 1400,
-
-    height: 700,
-
-    goalHeight: 240,
-
-    goalDepth: 70,
-
-    playerRadius: 18,
-
-    ballRadius: 13
-
-};
+const PLAYER_RADIUS = 18;
+const BALL_RADIUS = 13;
+const GOAL_HEIGHT = 240;
 
 
-/* =====================================================
+/* =========================================================
    GAME STATE
-===================================================== */
+========================================================= */
 
 let myId = null;
 
-let myName = "";
-
-let joined = false;
-
 let gameState = {
 
-    W: WORLD.width,
+    W: WORLD_WIDTH,
 
-    H: WORLD.height,
+    H: WORLD_HEIGHT,
 
     score: {
         blue: 0,
@@ -773,8 +789,8 @@ let gameState = {
     timeLeft: 300,
 
     ball: {
-        x: 700,
-        y: 350
+        x: WORLD_WIDTH / 2,
+        y: WORLD_HEIGHT / 2
     },
 
     players: []
@@ -782,294 +798,23 @@ let gameState = {
 };
 
 
-/* =====================================================
-   WEBSOCKET
-===================================================== */
+/* =========================================================
+   CONNECTION
+========================================================= */
 
 let socket = null;
 
-let reconnectTimer = null;
+let connected = false;
 
+let joined = false;
 
-function getSocketURL() {
-
-    const protocol =
-        location.protocol === "https:"
-        ? "wss:"
-        : "ws:";
-
-    return (
-        protocol +
-        "//" +
-        location.host
-    );
-}
-
-
-function connectSocket() {
-
-    if (
-        socket &&
-        (
-            socket.readyState ===
-            WebSocket.OPEN ||
-
-            socket.readyState ===
-            WebSocket.CONNECTING
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    try {
-
-        socket =
-            new WebSocket(
-                getSocketURL()
-            );
-
-
-        socket.addEventListener(
-            "open",
-            () => {
-
-                document
-                    .getElementById(
-                        "connection"
-                    )
-                    .style.display =
-                    "none";
-
-
-                if (myName) {
-
-                    sendName();
-
-                }
-
-            }
-        );
-
-
-        socket.addEventListener(
-            "message",
-            event => {
-
-                handleMessage(
-                    event.data
-                );
-
-            }
-        );
-
-
-        socket.addEventListener(
-            "close",
-            () => {
-
-                document
-                    .getElementById(
-                        "connection"
-                    )
-                    .style.display =
-                    joined
-                    ? "block"
-                    : "none";
-
-
-                scheduleReconnect();
-
-            }
-        );
-
-
-        socket.addEventListener(
-            "error",
-            () => {
-
-                document
-                    .getElementById(
-                        "connection"
-                    )
-                    .style.display =
-                    joined
-                    ? "block"
-                    : "none";
-
-            }
-        );
-
-
-    } catch (error) {
-
-        console.log(error);
-
-        scheduleReconnect();
-
-    }
-
-}
-
-
-function scheduleReconnect() {
-
-    if (reconnectTimer)
-        return;
-
-
-    reconnectTimer =
-        setTimeout(
-            () => {
-
-                reconnectTimer =
-                    null;
-
-                connectSocket();
-
-            },
-            2000
-        );
-
-}
-
-
-/* =====================================================
-   SERVER MESSAGE
-===================================================== */
-
-function handleMessage(raw) {
-
-    try {
-
-        const message =
-            JSON.parse(raw);
-
-
-        if (
-            message.type ===
-            "welcome"
-        ) {
-
-            myId =
-                String(message.id);
-
-            return;
-
-        }
-
-
-        if (
-            message.type ===
-            "state"
-        ) {
-
-            gameState =
-                message;
-
-            return;
-
-        }
-
-
-        if (
-            message.type ===
-            "chat"
-        ) {
-
-            addChatMessage(
-                message.name,
-                message.text
-            );
-
-            return;
-
-        }
-
-
-        if (
-            message.type ===
-            "error"
-        ) {
-
-            showLobbyError(
-                message.message ||
-                "Không thể vào phòng."
-            );
-
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Invalid server message",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   SEND
-===================================================== */
-
-function send(data) {
-
-    if (
-        !socket ||
-        socket.readyState !==
-        WebSocket.OPEN
-    ) {
-
-        return false;
-
-    }
-
-
-    try {
-
-        socket.send(
-            JSON.stringify(data)
-        );
-
-        return true;
-
-    } catch {
-
-        return false;
-
-    }
-
-}
-
-
-function sendName() {
-
-    if (!myName)
-        return;
-
-    send({
-
-        type: "name",
-
-        name: myName
-
-    });
-
-}
-
-
-/* =====================================================
-   LOBBY
-===================================================== */
 
 const lobby =
+    document.getElementById("lobby");
+
+const connectionStatus =
     document.getElementById(
-        "lobby"
+        "connectionStatus"
     );
 
 const nameInput =
@@ -1082,65 +827,299 @@ const joinButton =
         "joinButton"
     );
 
-const lobbyError =
-    document.getElementById(
-        "lobbyError"
-    );
+
+function connectSocket() {
+
+    connectionStatus.textContent =
+        "Đang kết nối máy chủ...";
+
+    const protocol =
+        location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    const address =
+        protocol +
+        "//" +
+        location.host;
 
 
-function showLobbyError(text) {
+    try {
 
-    lobbyError.textContent =
-        text;
+        socket =
+            new WebSocket(address);
+
+
+        socket.addEventListener(
+            "open",
+            () => {
+
+                connected = true;
+
+                connectionStatus.textContent =
+                    "Đã kết nối máy chủ";
+
+                joinButton.disabled =
+                    false;
+
+                joinButton.style.opacity =
+                    "1";
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "message",
+            event => {
+
+                receiveMessage(
+                    event.data
+                );
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "close",
+            () => {
+
+                connected = false;
+
+                if (joined) {
+
+                    connectionStatus.textContent =
+                        "Mất kết nối máy chủ";
+
+                } else {
+
+                    connectionStatus.textContent =
+                        "Mất kết nối. Đang thử lại...";
+
+                }
+
+                joinButton.disabled =
+                    true;
+
+                setTimeout(
+                    connectSocket,
+                    1500
+                );
+
+            }
+        );
+
+
+        socket.addEventListener(
+            "error",
+            () => {
+
+                connectionStatus.textContent =
+                    "Không kết nối được máy chủ";
+
+            }
+        );
+
+    } catch (error) {
+
+        connectionStatus.textContent =
+            "Không thể kết nối";
+
+    }
 
 }
 
 
-function joinGame() {
+/* =========================================================
+   RECEIVE SERVER DATA
+========================================================= */
 
-    const name =
-        nameInput.value
-            .trim()
-            .replace(
-                /[<>]/g,
-                ""
-            )
-            .slice(0, 16);
+function receiveMessage(raw) {
+
+    try {
+
+        const data =
+            JSON.parse(raw);
 
 
-    if (!name) {
+        /* =========================
+           WELCOME
+        ========================= */
 
-        showLobbyError(
-            "Bạn chưa nhập tên."
+        if (
+            data.type ===
+            "welcome"
+        ) {
+
+            myId =
+                String(data.id);
+
+            return;
+
+        }
+
+
+        /* =========================
+           GAME STATE
+        ========================= */
+
+        if (
+            data.type ===
+            "state"
+        ) {
+
+            if (
+                Number.isFinite(
+                    Number(data.W)
+                )
+            ) {
+
+                WORLD_WIDTH =
+                    Number(data.W);
+
+            }
+
+
+            if (
+                Number.isFinite(
+                    Number(data.H)
+                )
+            ) {
+
+                WORLD_HEIGHT =
+                    Number(data.H);
+
+            }
+
+
+            gameState = data;
+
+            updateUI();
+
+            return;
+
+        }
+
+
+        /* =========================
+           CHAT
+        ========================= */
+
+        if (
+            data.type ===
+            "chat"
+        ) {
+
+            addChatMessage(
+                data.name,
+                data.text
+            );
+
+            return;
+
+        }
+
+
+        /* =========================
+           ERROR
+        ========================= */
+
+        if (
+            data.type ===
+            "error"
+        ) {
+
+            connectionStatus.textContent =
+                data.message ||
+                "Máy chủ từ chối kết nối";
+
+            return;
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Dữ liệu server lỗi:",
+            error
         );
 
-        nameInput.focus();
+    }
+
+}
+
+
+/* =========================================================
+   JOIN
+========================================================= */
+
+function joinGame() {
+
+    if (
+        !connected ||
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        connectionStatus.textContent =
+            "Chưa kết nối được máy chủ";
 
         return;
 
     }
 
 
-    myName =
-        name;
+    let name =
+        nameInput.value
+            .trim();
+
+
+    if (!name) {
+
+        name =
+            "Player";
+
+    }
+
+
+    name =
+        name
+            .slice(0, 16)
+            .replace(
+                /[<>]/g,
+                ""
+            );
+
+
+    socket.send(
+        JSON.stringify({
+
+            type: "name",
+
+            name
+
+        })
+    );
 
 
     joined = true;
 
-
     lobby.style.display =
         "none";
 
-
-    connectSocket();
-
-
-    setTimeout(
-        sendName,
-        200
-    );
-
 }
+
+
+/* =========================================================
+   NAME INPUT
+========================================================= */
+
+joinButton.disabled = true;
+
+joinButton.style.opacity =
+    ".55";
 
 
 joinButton.addEventListener(
@@ -1158,8 +1137,6 @@ nameInput.addEventListener(
             "Enter"
         ) {
 
-            event.preventDefault();
-
             joinGame();
 
         }
@@ -1168,9 +1145,70 @@ nameInput.addEventListener(
 );
 
 
-/* =====================================================
+/* =========================================================
+   INPUT
+========================================================= */
+
+const input = {
+
+    up: false,
+
+    down: false,
+
+    left: false,
+
+    right: false
+
+};
+
+
+let kickPressed = false;
+
+
+/* =========================================================
+   SEND INPUT
+========================================================= */
+
+function sendInput(
+    kick = false
+) {
+
+    if (
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN ||
+        !joined
+    ) {
+
+        return;
+
+    }
+
+
+    socket.send(
+        JSON.stringify({
+
+            type: "input",
+
+            up: input.up,
+
+            down: input.down,
+
+            left: input.left,
+
+            right: input.right,
+
+            kick: kick
+
+        })
+    );
+
+}
+
+
+/* =========================================================
    JOYSTICK
-===================================================== */
+========================================================= */
 
 const joystick =
     document.getElementById(
@@ -1182,24 +1220,7 @@ const stick =
         "stick"
     );
 
-
-const input = {
-
-    up: false,
-
-    down: false,
-
-    left: false,
-
-    right: false,
-
-    kick: false
-
-};
-
-
-let joystickPointer =
-    null;
+let joystickPointer = null;
 
 
 function updateJoystick(
@@ -1215,7 +1236,6 @@ function updateJoystick(
         rect.left +
         rect.width / 2;
 
-
     const centerY =
         rect.top +
         rect.height / 2;
@@ -1224,7 +1244,6 @@ function updateJoystick(
     let dx =
         clientX -
         centerX;
-
 
     let dy =
         clientY -
@@ -1243,7 +1262,10 @@ function updateJoystick(
         );
 
 
-    if (distance > max) {
+    if (
+        distance >
+        max
+    ) {
 
         dx =
             dx /
@@ -1258,37 +1280,28 @@ function updateJoystick(
     }
 
 
-    const deadZone =
-        7;
+    const nx =
+        dx / max;
 
-
-    if (
-        Math.hypot(dx, dy) <
-        deadZone
-    ) {
-
-        dx = 0;
-        dy = 0;
-
-    }
+    const ny =
+        dy / max;
 
 
     input.left =
-        dx < -max * .22;
+        nx < -.15;
 
     input.right =
-        dx > max * .22;
+        nx > .15;
 
     input.up =
-        dy < -max * .22;
+        ny < -.15;
 
     input.down =
-        dy > max * .22;
+        ny > .15;
 
 
     stick.style.left =
         `calc(50% + ${dx}px)`;
-
 
     stick.style.top =
         `calc(50% + ${dy}px)`;
@@ -1307,9 +1320,11 @@ function resetJoystick() {
     stick.style.left =
         "50%";
 
-
     stick.style.top =
         "50%";
+
+
+    sendInput(false);
 
 }
 
@@ -1323,11 +1338,9 @@ joystick.addEventListener(
         joystickPointer =
             event.pointerId;
 
-
         joystick.setPointerCapture(
             event.pointerId
         );
-
 
         updateJoystick(
             event.clientX,
@@ -1345,9 +1358,11 @@ joystick.addEventListener(
         if (
             event.pointerId !==
             joystickPointer
-        )
+        ) {
+
             return;
 
+        }
 
         updateJoystick(
             event.clientX,
@@ -1358,39 +1373,44 @@ joystick.addEventListener(
 );
 
 
-function endJoystick(event) {
-
-    if (
-        event.pointerId !==
-        joystickPointer
-    )
-        return;
-
-
-    joystickPointer =
-        null;
-
-
-    resetJoystick();
-
-}
-
-
 joystick.addEventListener(
     "pointerup",
-    endJoystick
+    event => {
+
+        if (
+            event.pointerId !==
+            joystickPointer
+        ) {
+
+            return;
+
+        }
+
+        joystickPointer =
+            null;
+
+        resetJoystick();
+
+    }
 );
 
 
 joystick.addEventListener(
     "pointercancel",
-    endJoystick
+    () => {
+
+        joystickPointer =
+            null;
+
+        resetJoystick();
+
+    }
 );
 
 
-/* =====================================================
-   KICK
-===================================================== */
+/* =========================================================
+   KICK BUTTON
+========================================================= */
 
 const kickButton =
     document.getElementById(
@@ -1398,55 +1418,28 @@ const kickButton =
     );
 
 
-function kickDown(event) {
+function kick() {
 
-    event.preventDefault();
-
-    input.kick = true;
-
-    sendInput();
-
-}
-
-
-function kickUp(event) {
-
-    event.preventDefault();
-
-    input.kick = false;
-
-    sendInput();
+    sendInput(true);
 
 }
 
 
 kickButton.addEventListener(
     "pointerdown",
-    kickDown
+    event => {
+
+        event.preventDefault();
+
+        kick();
+
+    }
 );
 
 
-kickButton.addEventListener(
-    "pointerup",
-    kickUp
-);
-
-
-kickButton.addEventListener(
-    "pointercancel",
-    kickUp
-);
-
-
-kickButton.addEventListener(
-    "pointerleave",
-    kickUp
-);
-
-
-/* =====================================================
+/* =========================================================
    KEYBOARD
-===================================================== */
+========================================================= */
 
 const keys = {};
 
@@ -1472,15 +1465,7 @@ window.addEventListener(
         }
 
 
-        if (
-            event.key === " "
-        ) {
-
-            input.kick = true;
-
-            sendInput();
-
-        }
+        updateKeyboardInput();
 
     }
 );
@@ -1495,126 +1480,58 @@ window.addEventListener(
         ] = false;
 
 
-        if (
-            event.key === " "
-        ) {
-
-            input.kick = false;
-
-            sendInput();
-
-        }
+        updateKeyboardInput();
 
     }
 );
 
 
-function updateKeyboard() {
-
-    const keyboard = {
-
-        up:
-            !!(
-                keys["arrowup"] ||
-                keys["w"]
-            ),
-
-        down:
-            !!(
-                keys["arrowdown"] ||
-                keys["s"]
-            ),
-
-        left:
-            !!(
-                keys["arrowleft"] ||
-                keys["a"]
-            ),
-
-        right:
-            !!(
-                keys["arrowright"] ||
-                keys["d"]
-            )
-
-    };
-
-
-    /*
-     * Bàn phím chỉ bổ sung
-     * cho joystick.
-     */
-
-    input.up =
-        input.up ||
-        keyboard.up;
-
-    input.down =
-        input.down ||
-        keyboard.down;
+function updateKeyboardInput() {
 
     input.left =
-        input.left ||
-        keyboard.left;
+        !!(
+            keys["arrowleft"] ||
+            keys["a"]
+        );
 
     input.right =
-        input.right ||
-        keyboard.right;
+        !!(
+            keys["arrowright"] ||
+            keys["d"]
+        );
+
+    input.up =
+        !!(
+            keys["arrowup"] ||
+            keys["w"]
+        );
+
+    input.down =
+        !!(
+            keys["arrowdown"] ||
+            keys["s"]
+        );
 
 }
 
 
-/* =====================================================
-   SEND INPUT
-===================================================== */
+/* =========================================================
+   INPUT SEND LOOP
+========================================================= */
 
-let lastInputSend =
-    0;
+setInterval(
+    () => {
 
+        sendInput(false);
 
-function sendInput(force = false) {
-
-    const now =
-        performance.now();
-
-
-    if (
-        !force &&
-        now - lastInputSend <
-        30
-    ) {
-
-        return;
-
-    }
+    },
+    33
+);
 
 
-    lastInputSend =
-        now;
-
-
-    send({
-
-        type: "input",
-
-        up: !!input.up,
-
-        down: !!input.down,
-
-        left: !!input.left,
-
-        right: !!input.right,
-
-        kick: !!input.kick
-
-    });
-
-}
-
-
-/* =====================================================
+/* =========================================================
    CHAT
-===================================================== */
+========================================================= */
 
 const chatForm =
     document.getElementById(
@@ -1641,21 +1558,30 @@ chatForm.addEventListener(
 
         const text =
             chatInput.value
-                .trim()
-                .slice(0, 80);
+                .trim();
 
 
-        if (!text)
+        if (
+            !text ||
+            !socket ||
+            socket.readyState !==
+            WebSocket.OPEN
+        ) {
+
             return;
 
+        }
 
-        send({
 
-            type: "chat",
+        socket.send(
+            JSON.stringify({
 
-            text
+                type: "chat",
 
-        });
+                text
+
+            })
+        );
 
 
         chatInput.value =
@@ -1670,58 +1596,28 @@ function addChatMessage(
     text
 ) {
 
-    const line =
+    const element =
         document.createElement(
             "div"
         );
 
 
-    line.className =
-        "chatLine";
+    element.className =
+        "chatMessage";
 
 
-    const nameElement =
-        document.createElement(
-            "span"
-        );
-
-
-    nameElement.className =
-        "chatName";
-
-
-    nameElement.textContent =
-        name + ": ";
-
-
-    const textElement =
-        document.createElement(
-            "span"
-        );
-
-
-    textElement.textContent =
-        text;
-
-
-    line.appendChild(
-        nameElement
-    );
-
-
-    line.appendChild(
-        textElement
-    );
+    element.textContent =
+        `${name}: ${text}`;
 
 
     chatMessages.appendChild(
-        line
+        element
     );
 
 
     while (
         chatMessages.children.length >
-        8
+        5
     ) {
 
         chatMessages.removeChild(
@@ -1730,63 +1626,182 @@ function addChatMessage(
 
     }
 
+}
 
-    setTimeout(
-        () => {
 
-            if (line.parentNode) {
+/* =========================================================
+   UI
+========================================================= */
 
-                line.style.opacity =
-                    "0.35";
+function updateUI() {
 
-            }
+    const score =
+        gameState.score || {
+            blue: 0,
+            red: 0
+        };
 
-        },
-        7000
-    );
+
+    document.getElementById(
+        "score"
+    ).textContent =
+        `${score.blue} - ${score.red}`;
+
+
+    let time =
+        Number(
+            gameState.timeLeft
+        ) || 0;
+
+
+    time =
+        Math.max(
+            0,
+            time
+        );
+
+
+    const minutes =
+        Math.floor(
+            time / 60
+        );
+
+    const seconds =
+        Math.floor(
+            time % 60
+        );
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        String(minutes)
+            .padStart(2, "0") +
+        ":" +
+        String(seconds)
+            .padStart(2, "0");
+
+
+    document.getElementById(
+        "round"
+    ).textContent =
+        gameState.mode ===
+        "golden"
+            ? "CƠ HỘI VÀNG"
+            : `Vòng ${gameState.round || 1}`;
+
+
+    const players =
+        Array.isArray(
+            gameState.players
+        )
+            ? gameState.players
+            : [];
+
+
+    let blue = 0;
+    let red = 0;
+
+
+    for (
+        const player of players
+    ) {
+
+        if (
+            player.team ===
+            "blue"
+        ) {
+
+            blue++;
+
+        } else if (
+            player.team ===
+            "red"
+        ) {
+
+            red++;
+
+        }
+
+    }
+
+
+    document.getElementById(
+        "blueCount"
+    ).textContent =
+        blue;
+
+
+    document.getElementById(
+        "redCount"
+    ).textContent =
+        red;
+
+
+    drawStatus();
 
 }
 
 
-/* =====================================================
-   GAME SCALE
-===================================================== */
+/* =========================================================
+   STATUS
+========================================================= */
+
+function drawStatus() {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    if (
+        gameState.mode ===
+        "golden"
+    ) {
+
+        status.textContent =
+            "⚡ CƠ HỘI VÀNG ⚡";
+
+        status.style.display =
+            "block";
+
+    } else {
+
+        status.style.display =
+            "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   CAMERA / SCALE
+========================================================= */
 
 function getScale() {
 
-    const marginX = 18;
+    const marginX = 20;
 
-    /*
-     * Chừa chỗ scoreboard và
-     * nút điều khiển.
-     */
+    const topSpace = 80;
 
-    const availableWidth =
-        W -
-        marginX * 2;
-
-
-    const availableHeight =
-        H -
-        105;
+    const bottomSpace = 20;
 
 
     return Math.min(
 
-        availableWidth /
-        WORLD.width,
+        (W - marginX * 2) /
+        WORLD_WIDTH,
 
-        availableHeight /
-        WORLD.height
+        (H - topSpace -
+            bottomSpace) /
+        WORLD_HEIGHT
 
     );
 
 }
 
-
-/* =====================================================
-   WORLD TO SCREEN
-===================================================== */
 
 function worldToScreen(
     x,
@@ -1797,56 +1812,34 @@ function worldToScreen(
         getScale();
 
 
-    /*
-     * Server dùng:
-     *
-     * x = 0 -> biên trái
-     * x = 1400 -> biên phải
-     *
-     * y = 0 -> trên
-     * y = 700 -> dưới
-     */
-
-    const left =
-        W / 2 -
-        WORLD.width *
-        scale / 2;
-
-
-    const top =
-        H / 2 -
-        WORLD.height *
-        scale / 2;
-
-
     return {
 
         x:
-            left +
-            x * scale,
+            W / 2 +
+            (
+                x -
+                WORLD_WIDTH / 2
+            ) *
+            scale,
 
         y:
-            top +
-            y * scale
+            H / 2 +
+            (
+                y -
+                WORLD_HEIGHT / 2
+            ) *
+            scale
 
     };
 
 }
 
 
-/* =====================================================
+/* =========================================================
    FIELD
-===================================================== */
+========================================================= */
 
 function drawField() {
-
-    ctx.clearRect(
-        0,
-        0,
-        W,
-        H
-    );
-
 
     const scale =
         getScale();
@@ -1854,23 +1847,23 @@ function drawField() {
 
     const left =
         W / 2 -
-        WORLD.width *
-        scale / 2;
+        WORLD_WIDTH / 2 *
+        scale;
 
 
     const top =
         H / 2 -
-        WORLD.height *
-        scale / 2;
+        WORLD_HEIGHT / 2 *
+        scale;
 
 
     const width =
-        WORLD.width *
+        WORLD_WIDTH *
         scale;
 
 
     const height =
-        WORLD.height *
+        WORLD_HEIGHT *
         scale;
 
 
@@ -1879,7 +1872,23 @@ function drawField() {
      */
 
     ctx.fillStyle =
-        "#168f47";
+        "#159447";
+
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    /*
+     * Field
+     */
+
+    ctx.fillStyle =
+        "#159447";
 
 
     ctx.fillRect(
@@ -1891,23 +1900,19 @@ function drawField() {
 
 
     /*
-     * Grass stripes
+     * Stripes
      */
-
-    const stripeCount =
-        14;
-
 
     for (
         let i = 0;
-        i < stripeCount;
+        i < 10;
         i++
     ) {
 
         ctx.fillStyle =
             i % 2 === 0
-            ? "rgba(255,255,255,.025)"
-            : "rgba(0,0,0,.025)";
+                ? "rgba(255,255,255,.025)"
+                : "rgba(0,0,0,.025)";
 
 
         ctx.fillRect(
@@ -1915,12 +1920,12 @@ function drawField() {
             left +
             i *
             width /
-            stripeCount,
+            10,
 
             top,
 
             width /
-            stripeCount,
+            10,
 
             height
 
@@ -1930,18 +1935,13 @@ function drawField() {
 
 
     /*
-     * Outer lines
+     * Border
      */
 
     ctx.strokeStyle =
         "rgba(255,255,255,.9)";
 
-
-    ctx.lineWidth =
-        Math.max(
-            2,
-            3 * scale
-        );
+    ctx.lineWidth = 3;
 
 
     ctx.strokeRect(
@@ -1953,7 +1953,7 @@ function drawField() {
 
 
     /*
-     * Halfway
+     * Half line
      */
 
     ctx.beginPath();
@@ -1980,7 +1980,7 @@ function drawField() {
     ctx.arc(
         W / 2,
         H / 2,
-        92 * scale,
+        90 * scale,
         0,
         Math.PI * 2
     );
@@ -1997,10 +1997,7 @@ function drawField() {
     ctx.arc(
         W / 2,
         H / 2,
-        Math.max(
-            2.5,
-            4 * scale
-        ),
+        4,
         0,
         Math.PI * 2
     );
@@ -2017,19 +2014,20 @@ function drawField() {
         top
     );
 
-
     drawGoals(
         scale,
         left,
-        top
+        top,
+        width,
+        height
     );
 
 }
 
 
-/* =====================================================
+/* =========================================================
    PENALTY AREAS
-===================================================== */
+========================================================= */
 
 function drawPenaltyAreas(
     scale,
@@ -2037,67 +2035,57 @@ function drawPenaltyAreas(
     top
 ) {
 
-    const boxWidth =
-        180;
-
-    const boxHeight =
-        360;
-
-
-    const y =
-        350 -
-        boxHeight / 2;
+    const boxW = 170;
+    const boxH = 300;
 
 
     ctx.strokeStyle =
-        "rgba(255,255,255,.78)";
+        "rgba(255,255,255,.8)";
 
-
-    ctx.lineWidth =
-        Math.max(
-            2,
-            2 * scale
-        );
+    ctx.lineWidth = 2;
 
 
     /*
-     * Left
+     * LEFT
      */
 
     ctx.strokeRect(
 
         left,
 
-        top +
-        y * scale,
-
-        boxWidth *
+        H / 2 -
+        boxH / 2 *
         scale,
 
-        boxHeight *
+        boxW *
+        scale,
+
+        boxH *
         scale
 
     );
 
 
     /*
-     * Right
+     * RIGHT
      */
 
     ctx.strokeRect(
 
         left +
-        (WORLD.width -
-        boxWidth) *
+        WORLD_WIDTH *
+        scale -
+        boxW *
         scale,
 
-        top +
-        y * scale,
-
-        boxWidth *
+        H / 2 -
+        boxH / 2 *
         scale,
 
-        boxHeight *
+        boxW *
+        scale,
+
+        boxH *
         scale
 
     );
@@ -2105,27 +2093,36 @@ function drawPenaltyAreas(
 }
 
 
-/* =====================================================
+/* =========================================================
    GOALS
-===================================================== */
+========================================================= */
 
 function drawGoals(
     scale,
     left,
-    top
+    top,
+    width,
+    height
 ) {
 
     const goalHeight =
-        WORLD.goalHeight;
-
+        GOAL_HEIGHT *
+        scale;
 
     const goalDepth =
-        WORLD.goalDepth;
+        70 *
+        scale;
 
 
-    const goalY =
-        350 -
+    const goalTop =
+        H / 2 -
         goalHeight / 2;
+
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.9)";
 
 
     /*
@@ -2133,46 +2130,33 @@ function drawGoals(
      */
 
     ctx.fillStyle =
-        "rgba(255,255,255,.13)";
+        "rgba(255,255,255,.12)";
 
 
     ctx.fillRect(
 
         left -
-        goalDepth * scale,
+        goalDepth,
 
-        top +
-        goalY * scale,
+        goalTop,
 
-        goalDepth * scale,
+        goalDepth,
 
-        goalHeight * scale
+        goalHeight
 
     );
-
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,.95)";
-
-
-    ctx.lineWidth =
-        Math.max(
-            2,
-            3 * scale
-        );
 
 
     ctx.strokeRect(
 
         left -
-        goalDepth * scale,
+        goalDepth,
 
-        top +
-        goalY * scale,
+        goalTop,
 
-        goalDepth * scale,
+        goalDepth,
 
-        goalHeight * scale
+        goalHeight
 
     );
 
@@ -2182,61 +2166,51 @@ function drawGoals(
      */
 
     ctx.fillStyle =
-        "rgba(255,255,255,.13)";
+        "rgba(255,255,255,.12)";
 
 
     ctx.fillRect(
 
         left +
-        WORLD.width *
-        scale,
+        width,
 
-        top +
-        goalY * scale,
+        goalTop,
 
-        goalDepth * scale,
+        goalDepth,
 
-        goalHeight * scale
+        goalHeight
 
     );
-
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,.95)";
 
 
     ctx.strokeRect(
 
         left +
-        WORLD.width *
-        scale,
+        width,
 
-        top +
-        goalY * scale,
+        goalTop,
 
-        goalDepth * scale,
+        goalDepth,
 
-        goalHeight * scale
+        goalHeight
 
     );
 
 }
 
 
-/* =====================================================
-   BALL
-===================================================== */
+/* =========================================================
+   PLAYER
+========================================================= */
 
-function drawBall() {
+function drawPlayer(
+    player
+) {
 
-    if (!gameState.ball)
-        return;
-
-
-    const p =
+    const position =
         worldToScreen(
-            gameState.ball.x,
-            gameState.ball.y
+            Number(player.x),
+            Number(player.y)
         );
 
 
@@ -2245,8 +2219,15 @@ function drawBall() {
 
 
     const radius =
-        WORLD.ballRadius *
+        PLAYER_RADIUS *
         scale;
+
+
+    const color =
+        player.team ===
+        "red"
+            ? "#ef4148"
+            : "#3d78ff";
 
 
     /*
@@ -2255,42 +2236,11 @@ function drawBall() {
 
     ctx.beginPath();
 
-    ctx.ellipse(
-
-        p.x + 2,
-
-        p.y + 4,
-
-        radius * 1.05,
-
-        radius * .7,
-
-        0,
-
-        0,
-
-        Math.PI * 2
-
-    );
-
-
-    ctx.fillStyle =
-        "rgba(0,0,0,.28)";
-
-    ctx.fill();
-
-
-    /*
-     * White ball
-     */
-
-    ctx.beginPath();
-
     ctx.arc(
 
-        p.x,
+        position.x + 2,
 
-        p.y,
+        position.y + 3,
 
         radius,
 
@@ -2300,187 +2250,8 @@ function drawBall() {
 
     );
 
-
     ctx.fillStyle =
-        "#f5f5f5";
-
-    ctx.fill();
-
-
-    ctx.strokeStyle =
-        "#222";
-
-    ctx.lineWidth =
-        Math.max(
-            1,
-            1.5 * scale
-        );
-
-    ctx.stroke();
-
-
-    /*
-     * HaxBall-style
-     * simple black details
-     */
-
-    ctx.fillStyle =
-        "#222";
-
-
-    /*
-     * Center pentagon-like mark
-     */
-
-    drawBallPatch(
-        p.x,
-        p.y,
-        radius * .28
-    );
-
-
-    /*
-     * Small patches
-     */
-
-    const patches = [
-
-        [-.58, -.28],
-
-        [.58, -.28],
-
-        [-.48, .52],
-
-        [.48, .52]
-
-    ];
-
-
-    for (
-        const patch of patches
-    ) {
-
-        drawBallPatch(
-
-            p.x +
-            patch[0] *
-            radius,
-
-            p.y +
-            patch[1] *
-            radius,
-
-            radius * .13
-
-        );
-
-    }
-
-}
-
-
-function drawBallPatch(
-    x,
-    y,
-    r
-) {
-
-    ctx.beginPath();
-
-    for (
-        let i = 0;
-        i < 5;
-        i++
-    ) {
-
-        const angle =
-            -Math.PI / 2 +
-            i *
-            Math.PI * 2 / 5;
-
-
-        const px =
-            x +
-            Math.cos(angle) *
-            r;
-
-
-        const py =
-            y +
-            Math.sin(angle) *
-            r;
-
-
-        if (i === 0)
-            ctx.moveTo(px, py);
-        else
-            ctx.lineTo(px, py);
-
-    }
-
-    ctx.closePath();
-
-    ctx.fill();
-
-}
-
-
-/* =====================================================
-   PLAYER DISC
-===================================================== */
-
-function drawPlayer(
-    player
-) {
-
-    const p =
-        worldToScreen(
-            player.x,
-            player.y
-        );
-
-
-    const scale =
-        getScale();
-
-
-    const r =
-        WORLD.playerRadius *
-        scale;
-
-
-    const isMe =
-        String(player.id) ===
-        String(myId);
-
-
-    /*
-     * Shadow
-     */
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-
-        p.x + 2,
-
-        p.y + 4,
-
-        r * 1.05,
-
-        r * .72,
-
-        0,
-
-        0,
-
-        Math.PI * 2
-
-    );
-
-
-    ctx.fillStyle =
-        "rgba(0,0,0,.3)";
+        "rgba(0,0,0,.28)";
 
     ctx.fill();
 
@@ -2493,11 +2264,11 @@ function drawPlayer(
 
     ctx.arc(
 
-        p.x,
+        position.x,
 
-        p.y,
+        position.y,
 
-        r,
+        radius,
 
         0,
 
@@ -2505,22 +2276,8 @@ function drawPlayer(
 
     );
 
-
-    if (
-        player.team ===
-        "red"
-    ) {
-
-        ctx.fillStyle =
-            "#e94343";
-
-    } else {
-
-        ctx.fillStyle =
-            "#3d78ff";
-
-    }
-
+    ctx.fillStyle =
+        color;
 
     ctx.fill();
 
@@ -2530,132 +2287,61 @@ function drawPlayer(
      */
 
     ctx.strokeStyle =
-        isMe
-        ? "#ffffff"
-        : "rgba(255,255,255,.72)";
+        "rgba(255,255,255,.95)";
 
-
-    ctx.lineWidth =
-        isMe
-        ? Math.max(
-            2.5,
-            3 * scale
-        )
-        : Math.max(
-            1.5,
-            2 * scale
-        );
+    ctx.lineWidth = 2;
 
 
     ctx.stroke();
 
 
     /*
-     * Inner highlight
+     * Inner HaxBall-like highlight
      */
 
     ctx.beginPath();
 
     ctx.arc(
 
-        p.x -
-        r * .25,
+        position.x -
+        radius * .27,
 
-        p.y -
-        r * .25,
+        position.y -
+        radius * .27,
 
-        r * .52,
+        radius * .32,
 
-        Math.PI,
+        0,
 
-        Math.PI * 1.5
+        Math.PI * 2
 
     );
-
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,.22)";
-
-
-    ctx.lineWidth =
-        Math.max(
-            1,
-            2 * scale
-        );
-
-
-    ctx.stroke();
-
-
-    /*
-     * Tên
-     */
-
-    ctx.font =
-        `bold ${
-            Math.max(
-                9,
-                11 * scale
-            )
-        }px Arial`;
-
-
-    ctx.textAlign =
-        "center";
-
-
-    ctx.textBaseline =
-        "middle";
 
 
     ctx.fillStyle =
-        "white";
+        "rgba(255,255,255,.22)";
 
-
-    ctx.shadowColor =
-        "rgba(0,0,0,.9)";
-
-
-    ctx.shadowBlur =
-        3;
-
-
-    ctx.fillText(
-
-        String(
-            player.name ||
-            "Player"
-        ).slice(0,16),
-
-        p.x,
-
-        p.y -
-        r -
-        9
-
-    );
-
-
-    ctx.shadowBlur =
-        0;
+    ctx.fill();
 
 
     /*
-     * Viền sáng quanh người chơi
-     * của chính mình.
+     * YOU ring
      */
 
-    if (isMe) {
+    if (
+        String(player.id) ===
+        String(myId)
+    ) {
 
         ctx.beginPath();
 
         ctx.arc(
 
-            p.x,
+            position.x,
 
-            p.y,
+            position.y,
 
-            r + 5,
+            radius + 4,
 
             0,
 
@@ -2663,10 +2349,8 @@ function drawPlayer(
 
         );
 
-
         ctx.strokeStyle =
-            "rgba(255,255,255,.35)";
-
+            "rgba(255,255,255,.65)";
 
         ctx.lineWidth = 2;
 
@@ -2674,296 +2358,190 @@ function drawPlayer(
 
     }
 
-}
 
+    /*
+     * Player name
+     */
 
-/* =====================================================
-   PLAYER LIST
-===================================================== */
+    ctx.font =
+        "bold 10px Arial";
 
-function updatePlayerList() {
+    ctx.textAlign =
+        "center";
 
-    const element =
-        document.getElementById(
-            "playerList"
-        );
+    ctx.textBaseline =
+        "alphabetic";
 
 
-    const players =
-        gameState.players ||
-        [];
+    ctx.fillStyle =
+        "rgba(255,255,255,.9)";
 
 
-    let blue = [];
+    ctx.shadowColor =
+        "rgba(0,0,0,.8)";
 
-    let red = [];
+    ctx.shadowBlur = 3;
 
 
-    for (
-        const player of players
-    ) {
+    ctx.fillText(
 
-        if (
-            player.team ===
-            "blue"
-        ) {
+        String(
+            player.name ||
+            "Player"
+        ).slice(0, 16),
 
-            blue.push(player);
+        position.x,
 
-        } else {
+        position.y -
+        radius -
+        7
 
-            red.push(player);
-
-        }
-
-    }
-
-
-    let html = "";
-
-
-    html +=
-        `<div class="teamBlue">
-            🔵 ${blue.length}
-        </div>`;
-
-
-    html +=
-        `<div class="teamRed">
-            🔴 ${red.length}
-        </div>`;
-
-
-    element.innerHTML =
-        html;
-
-}
-
-
-/* =====================================================
-   SCOREBOARD
-===================================================== */
-
-function updateScoreboard() {
-
-    const score =
-        gameState.score ||
-        {
-            blue: 0,
-            red: 0
-        };
-
-
-    document.getElementById(
-        "score"
-    ).textContent =
-        `${score.blue} - ${score.red}`;
-
-
-    let time =
-        Number(
-            gameState.timeLeft
-        );
-
-
-    if (
-        !Number.isFinite(time)
-    ) {
-
-        time = 300;
-
-    }
-
-
-    time =
-        Math.max(
-            0,
-            time
-        );
-
-
-    const minutes =
-        Math.floor(
-            time / 60
-        );
-
-
-    const seconds =
-        Math.floor(
-            time % 60
-        );
-
-
-    document.getElementById(
-        "time"
-    ).textContent =
-
-        String(minutes)
-            .padStart(2, "0") +
-
-        ":" +
-
-        String(seconds)
-            .padStart(2, "0");
-
-
-    const mode =
-        gameState.mode;
-
-
-    const round =
-        gameState.round ||
-        1;
-
-
-    document.getElementById(
-        "roundMode"
-    ).textContent =
-
-        mode === "golden"
-
-        ? `Vòng ${round} • CƠ HỘI VÀNG`
-
-        : `Vòng ${round}`;
-
-}
-
-
-/* =====================================================
-   GOAL / MODE STATUS
-===================================================== */
-
-let previousMode =
-    "normal";
-
-
-let previousScoreBlue =
-    0;
-
-
-let previousScoreRed =
-    0;
-
-
-function detectEvents() {
-
-    const mode =
-        gameState.mode;
-
-
-    const blue =
-        gameState.score.blue;
-
-
-    const red =
-        gameState.score.red;
-
-
-    if (
-        mode !==
-        previousMode
-    ) {
-
-        if (
-            mode ===
-            "golden"
-        ) {
-
-            showStatus(
-                "⚡ CƠ HỘI VÀNG ⚡",
-                2200
-            );
-
-        }
-
-    }
-
-
-    if (
-        blue !==
-        previousScoreBlue
-    ) {
-
-        showStatus(
-            "🔵 GOOOOOL!",
-            1200
-        );
-
-    }
-
-
-    if (
-        red !==
-        previousScoreRed
-    ) {
-
-        showStatus(
-            "🔴 GOOOOOL!",
-            1200
-        );
-
-    }
-
-
-    previousMode =
-        mode;
-
-
-    previousScoreBlue =
-        blue;
-
-
-    previousScoreRed =
-        red;
-
-}
-
-
-let statusTimer =
-    null;
-
-
-function showStatus(
-    text,
-    duration
-) {
-
-    const status =
-        document.getElementById(
-            "status"
-        );
-
-
-    status.textContent =
-        text;
-
-
-    status.style.display =
-        "block";
-
-
-    clearTimeout(
-        statusTimer
     );
 
 
-    statusTimer =
-        setTimeout(
-            () => {
-
-                status.style.display =
-                    "none";
-
-            },
-            duration
-        );
+    ctx.shadowBlur = 0;
 
 }
 
 
-/* =====================================================
+/* =========================================================
+   BALL
+========================================================= */
+
+function drawBall() {
+
+    if (
+        !gameState.ball
+    ) {
+
+        return;
+
+    }
+
+
+    const position =
+        worldToScreen(
+
+            Number(
+                gameState.ball.x
+            ),
+
+            Number(
+                gameState.ball.y
+            )
+
+        );
+
+
+    const scale =
+        getScale();
+
+
+    const radius =
+        BALL_RADIUS *
+        scale;
+
+
+    /*
+     * Shadow
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+        position.x + 2,
+
+        position.y + 3,
+
+        radius,
+
+        0,
+
+        Math.PI * 2
+
+    );
+
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+
+    ctx.fill();
+
+
+    /*
+     * Ball
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+        position.x,
+
+        position.y,
+
+        radius,
+
+        0,
+
+        Math.PI * 2
+
+    );
+
+
+    ctx.fillStyle =
+        "#ffffff";
+
+
+    ctx.fill();
+
+
+    ctx.strokeStyle =
+        "#222";
+
+
+    ctx.lineWidth = 1.5;
+
+
+    ctx.stroke();
+
+
+    /*
+     * Black center detail
+     */
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+        position.x,
+
+        position.y,
+
+        radius * .24,
+
+        0,
+
+        Math.PI * 2
+
+    );
+
+
+    ctx.fillStyle =
+        "#222";
+
+
+    ctx.fill();
+
+
+}
+
+
+/* =========================================================
    RENDER
-===================================================== */
+========================================================= */
 
 function render() {
 
@@ -2971,8 +2549,11 @@ function render() {
 
 
     const players =
-        gameState.players ||
-        [];
+        Array.isArray(
+            gameState.players
+        )
+            ? gameState.players
+            : [];
 
 
     /*
@@ -2983,97 +2564,48 @@ function render() {
         const player of players
     ) {
 
-        drawPlayer(player);
+        drawPlayer(
+            player
+        );
 
     }
 
 
     /*
-     * Bóng nằm trên cầu thủ
-     * để dễ nhìn.
+     * Vẽ bóng sau
      */
 
     drawBall();
 
-
-    updateScoreboard();
-
-    updatePlayerList();
-
-    detectEvents();
-
 }
 
 
-/* =====================================================
-   INPUT LOOP
-===================================================== */
+/* =========================================================
+   GAME LOOP
+========================================================= */
 
-let lastInputTick =
-    0;
-
-
-function inputLoop(now) {
-
-    updateKeyboard();
-
-
-    if (
-        now -
-        lastInputTick >
-        40
-    ) {
-
-        sendInput();
-
-        lastInputTick =
-            now;
-
-    }
-
-
-    requestAnimationFrame(
-        inputLoop
-    );
-
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-nameInput.focus();
-
-
-connectSocket();
-
-
-requestAnimationFrame(
-    inputLoop
-);
-
-
-/* =====================================================
-   GAME RENDER LOOP
-===================================================== */
-
-function renderLoop() {
+function gameLoop() {
 
     render();
 
     requestAnimationFrame(
-        renderLoop
+        gameLoop
     );
 
 }
 
 
+/* =========================================================
+   START
+========================================================= */
+
+connectSocket();
+
 requestAnimationFrame(
-    renderLoop
+    gameLoop
 );
 
 </script>
 
 </body>
-      </html>
+</html>
